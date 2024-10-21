@@ -4,7 +4,6 @@
 from math import sqrt, fabs
 from interval import Interval
 import rtutils
-from numpy import fmin
 class Vector3:
     # Constructor
     def __init__(self, x, y, z):
@@ -102,7 +101,7 @@ class Vector3:
         else:
             return False
     def Refract(self, othervec, etaiOverEtat):
-        cosTheta = fmin(self.Negative().dot(othervec), 1.0)
+        cosTheta = rtutils.fmin(self.Negative().dot(othervec), 1.0)
         rOutPerp = (self + othervec * cosTheta) * etaiOverEtat
         rOutParallel = othervec * -sqrt(fabs(1.0 - rOutPerp.LengthSquared()))
         return rOutPerp + rOutParallel
