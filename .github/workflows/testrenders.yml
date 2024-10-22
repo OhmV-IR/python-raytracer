@@ -1,8 +1,9 @@
 name: Testing renders
 run-name: ${{github.actor}} is testing the raytracer
-on: workflow-dispatch
+on: 
+    workflow-dispatch
 jobs:
-    raytracer-test-renders:
+    raytracerRenders:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v4
