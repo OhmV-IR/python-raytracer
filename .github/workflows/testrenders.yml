@@ -2,8 +2,8 @@ name: Testing renders
 run-name: ${{github.actor}} is testing the raytracer
 on: 
     push:
-        branches:
-            - 'releases/**'
+        release:
+            types: [created]
 jobs:
     build:
         runs-on: ubuntu-latest
