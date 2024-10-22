@@ -23,7 +23,7 @@ class hittableList(hittable):
         if self.boundingBox == None:
             self.boundingBox = obj.boundingBox
         else:
-            self.boundingBox = AABB(False, None, None, None, None, None, True, self.boundingBox, obj.boundingBox)
+            self.boundingBox = AABB.CreateBoundingBoxFromBoxes(self.boundingBox, obj.boundingBox)
     def hit(self, ray: Ray, t: Interval) -> HitRecord:
         closest = t.max
         currentreturn = HitRecord(Vector3(0,0,0), Vector3(0,0,0), 0, False, False)
@@ -38,7 +38,7 @@ class BVHNode(hittable):
     def __init__(self, hittableArr, startIndex, endIndex):
         self.boundingBox = hittableArr[startIndex].boundingBox
         for i in range(startIndex+1, endIndex):
-            self.boundingBox = AABB(False, None, None, None, None, None, True, self.boundingBox, hittableArr[i].boundingBox)
+            self.boundingBox = AABB.CreateBoundingBoxFromBoxes(self.boundingBox, hittableArr[i].boundingBox)
         axis = self.boundingBox.LongestAxis()
         if axis == 0:
             comparator = BVHNode.BoxCompareX

@@ -22,9 +22,9 @@ class Quad(hittable):
         self = Quad.ComputeBoundingBox(self)
     @staticmethod
     def ComputeBoundingBox(self):
-        bboxDiagonal1 = AABB(True, None, None, None, self.Q, self.Q + self.v + self.u)
-        bboxDiagonal2 = AABB(True, None, None, None, self.Q + self.u, self.Q + self.v)
-        self.boundingBox = AABB(False, None, None, None, None, None, True, bboxDiagonal1, bboxDiagonal2)
+        bboxDiagonal1 = AABB.CreateBoundingBoxFromPoints(self.Q, self.Q + self.v + self.u)
+        bboxDiagonal2 = AABB.CreateBoundingBoxFromPoints(self.Q + self.u, self.Q + self.v)
+        self.boundingBox = AABB.CreateBoundingBoxFromBoxes(bboxDiagonal1, bboxDiagonal2)
         return self
     def hit(self, ray: Ray, t: Interval) -> HitRecord:
         denom = self.normal.dot(ray.direction)

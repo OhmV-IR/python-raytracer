@@ -3,13 +3,13 @@ from ray import Ray
 from hitrecord import HitRecord
 from vector3 import Vector3
 class AABB:
-    x = None
-    y = None
-    z = None
-    def __add__(self, offset: Vector3):
+    ''' Bounding boxes for easy hit/miss checks, helps with performance'''
+    def __add__(self: 'AABB', offset: Vector3):
+        '''Offsets/moves the box by a vector'''
         return AABB(False, self.x + offset.x, self.y + offset.y, self.z + offset.z)
     @staticmethod
-    def PadToMinimums(self):
+    def PadToMinimums(self: 'AABB'):
+        '''Ensures that all dimensions of the box are at least a small value as to avoid floating point errors when doing hit detection math'''
         delta = 0.0001
         if self.x.Size() < delta:
             self.x = self.x.Expand(delta)
@@ -17,37 +17,45 @@ class AABB:
             self.y = self.y.Expand(delta)
         if self.z.Size() < delta:
             self.z = self.z.Expand(delta)
-    def __init__(self, usingPoints: bool, x=None, y=None, z=None, point1=None, point2=None, using2Boxes=False, box1=None, box2=None):
-        if usingPoints:
-            if point1.x <= point2.x:
-                self.x = Interval(point1.x, point2.x)
-            else:
-                self.x = Interval(point2.x, point1.x)
-            if point1.y <= point2.y:
-                self.y = Interval(point1.y, point2.y)
-            else:
-                self.y = Interval(point2.y, point1.y)
-            if point1.z <= point2.z:
-                self.z = Interval(point1.z, point2.z)
-            else:
-                self.z = Interval(point2.z, point1.z)
-        elif using2Boxes:
-            self.x = Interval(None, None, False, True, box1.x, box2.x)
-            self.y = Interval(None, None, False, True, box1.y, box2.y)
-            self.z = Interval(None, None, False, True, box1.z, box2.z)
+    @staticmethod
+    def CreateBoundingBoxFromPoints(point1: Vector3, point2: Vector3):
+        '''Create a bounding box from the top-left corner of the box(point 1) and the bottom-right corner of the box(point 2)'''
+        if point1.x <= point2.x:
+            x = Interval(point1.x, point2.x)
         else:
-            self.x = x
-            self.y = y
-            self.z = z
+            x = Interval(point2.x, point1.x)
+        if point1.y <= point2.y:
+            y = Interval(point1.y, point2.y)
+        else:
+            y = Interval(point2.y, point1.y)
+        if point1.z <= point2.z:
+            z = Interval(point1.z, point2.z)
+        else:
+            z = Interval(point2.z, point1.z)
+        return AABB(x,y,z)
+    @staticmethod
+    def CreateBoundingBoxFromBoxes(box1: 'AABB', box2: 'AABB'):
+        '''Create a bounding box by merging 2 existing boxes'''
+        x = Interval(None, None, False, True, box1.x, box2.x)
+        y = Interval(None, None, False, True, box1.y, box2.y)
+        z = Interval(None, None, False, True, box1.z, box2.z)
+        return AABB(x,y,z)
+    def __init__(self: 'AABB', x: Interval, y: Interval, z: Interval):
+        '''Create a bounding box using 3 intervals to describe the volume of the box'''
+        self.x = x
+        self.y = y
+        self.z = z
         self = AABB.PadToMinimums(self)
-    def AxisInterval(self, n:int):
+    def AxisInterval(self: 'AABB', n:int):
+        '''If n = 1, x interval is returned and so forth'''
         if n == 1:
             return self.y
         elif n == 2:
             return self.z
         else:
             return self.x
-    def LongestAxis(self):
+    def LongestAxis(self: 'AABB'):
+        '''Returns the number of the smallest axis(0 for x, 1 for y, 2 for z)'''
         if self.x.Size() > self.y.Size():
             if self.x.Size() > self.z.Size():
                 return 0
@@ -58,7 +66,8 @@ class AABB:
                 return 1
             else:
                 return 2
-    def hit(self, ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'AABB', ray: Ray, t: Interval) -> HitRecord:
+        '''Checks if the ray hit the bounding box'''
         rayOrigin = ray.origin
         rayDirection = ray.direction
         for axis in range(0,3):

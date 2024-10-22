@@ -16,14 +16,14 @@ class Sphere(hittable):
         self.isMoving = isMoving
         if isMoving:
             rvec = Vector3(radius, radius, radius)
-            self.box1 = AABB(True, None, None, None, center - rvec, center + rvec)
-            self.box2 = AABB(True, None, None, None, center2 - rvec, center2 + rvec)
-            self.boundingBox = AABB(False, None, None, None, None, None, True, self.box1, self.box2)
+            self.box1 = AABB.CreateBoundingBoxFromPoints(center - rvec, center + rvec)
+            self.box2 = AABB.CreateBoundingBoxFromPoints(center2 - rvec, center2 + rvec)
+            self.boundingBox = AABB.CreateBoundingBoxFromBoxes(self.box1, self.box2)
             self.center2 = center2
             self.centerVec = center2 - center
         else:
             rvec = Vector3(radius, radius, radius)
-            self.boundingBox = AABB(True, None, None, None, center - rvec, center + rvec)
+            self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - rvec, center + rvec)
     def SphereCenter(self, time):
         return self.center + self.centerVec * time
     def hit(self, ray: Ray, t: Interval) -> HitRecord:
