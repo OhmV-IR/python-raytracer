@@ -6,7 +6,7 @@ class AABB:
     ''' Bounding boxes for easy hit/miss checks, helps with performance'''
     def __add__(self: 'AABB', offset: Vector3):
         '''Offsets/moves the box by a vector'''
-        return AABB(False, self.x + offset.x, self.y + offset.y, self.z + offset.z)
+        return AABB(self.x + offset.x, self.y + offset.y, self.z + offset.z)
     @staticmethod
     def PadToMinimums(self: 'AABB'):
         '''Ensures that all dimensions of the box are at least a small value as to avoid floating point errors when doing hit detection math'''
