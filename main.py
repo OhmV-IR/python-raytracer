@@ -5,7 +5,7 @@ from camera import Camera
 from rtutils import *
 from material import Dielectric, Lambertian, Metal, DiffuseLight, Material
 from texture import SolidColor, CheckerTexture, ImageTexture, Texture, NoiseTexture
-from Quadrilateral import Quad, Box
+from Quadrilateral import Quad
 from sphere import Sphere
 from hittable import *
 world = hittableList(True)
@@ -51,8 +51,8 @@ def RenderCornellBoxesTranslate(filePath: str):
     rtworld.add(Quad(Vector3(0,0,0), Vector3(555,0,0), Vector3(0,0,555), white))
     rtworld.add(Quad(Vector3(555,555,555), Vector3(-555,0,0), Vector3(0,0,-555), white))
     rtworld.add(Quad(Vector3(0,0,555), Vector3(555,0,0), Vector3(0,555,0), white))
-    rtworld.add(Translate(Box(Vector3(130,0,65), Vector3(295, 165, 230), white), Vector3(0, 0, 100)))
-    rtworld.add(Translate(Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white), Vector3(0,0,100)))
+    rtworld.add(Translate(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white), Vector3(0, 0, 100)))
+    rtworld.add(Translate(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white), Vector3(0,0,100)))
     camera = Camera(1,600, 100, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
 def RenderEarth(filePath: str):
@@ -307,7 +307,7 @@ while True:
                     pass
                 else:
                     break
-            box = Box(Vector3(c1x, c1y, c1z), Vector3(c2x, c2y, c2z), SelectMaterial())
+            box = Quad.Box(Vector3(c1x, c1y, c1z), Vector3(c2x, c2y, c2z), SelectMaterial())
             boxcmd = input("Please enter a valid entity altering command to modify the box, or type done to add it to the scene:\ndone - add the box to the scene\ntransform - transform the shape of the box and add it to the scene\n")
             if boxcmd == "done" or boxcmd == "Done":
                 world.add(box)
