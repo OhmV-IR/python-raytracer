@@ -36,9 +36,9 @@ class AABB:
     @staticmethod
     def CreateBoundingBoxFromBoxes(box1: 'AABB', box2: 'AABB'):
         '''Create a bounding box by merging 2 existing boxes'''
-        x = Interval(None, None, False, True, box1.x, box2.x)
-        y = Interval(None, None, False, True, box1.y, box2.y)
-        z = Interval(None, None, False, True, box1.z, box2.z)
+        x = Interval.CombineIntervals(box1.x, box2.x)
+        y = Interval.CombineIntervals(box1.y, box2.y)
+        z = Interval.CombineIntervals(box1.z, box2.z)
         return AABB(x,y,z)
     def __init__(self: 'AABB', x: Interval, y: Interval, z: Interval):
         '''Create a bounding box using 3 intervals to describe the volume of the box'''
@@ -66,7 +66,7 @@ class AABB:
                 return 1
             else:
                 return 2
-    def hit(self: 'AABB', ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'AABB', ray: Ray, t: Interval) -> Interval:
         '''Checks if the ray hit the bounding box'''
         rayOrigin = ray.origin
         rayDirection = ray.direction

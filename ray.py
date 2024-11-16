@@ -9,5 +9,10 @@ class Ray:
         self.direction = direction
         self.scattered = scattered
         self.attenuation = attenuation
+    @staticmethod
+    def CreateNullRay() -> 'Ray':
+        '''This function is used by materials which do not scatter rays to return a null ray with blank values
+        and the scattered attribute set to false'''
+        return Ray(Vector3(0,0,0), Vector3(0,0,0))
     def PointAtTime(self, time: float):
         return self.origin + self.direction * time

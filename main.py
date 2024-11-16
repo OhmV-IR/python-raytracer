@@ -35,8 +35,8 @@ def RenderCornellBoxes(filePath: str):
     rtworld.add(Quad(Vector3(0,0,0), Vector3(555,0,0), Vector3(0,0,555), white))
     rtworld.add(Quad(Vector3(555,555,555), Vector3(-555,0,0), Vector3(0,0,-555), white))
     rtworld.add(Quad(Vector3(0,0,555), Vector3(555,0,0), Vector3(0,555,0), white))
-    rtworld.add(Box(Vector3(130,0,65), Vector3(295, 165, 230), white))
-    rtworld.add(Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white))
+    rtworld.add(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white))
+    rtworld.add(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white))
     camera = Camera(1,600, 200, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
 def RenderCornellBoxesTranslate(filePath: str):
@@ -59,14 +59,14 @@ def RenderEarth(filePath: str):
     rtworld = hittableList(True)
     earthtex = ImageTexture("earthmap.jpg")
     earthsurface = Lambertian(earthtex)
-    rtworld.add(Sphere(2, Vector3(0,0,0), earthsurface))
+    rtworld.add(Sphere.CreateSphere(2, Vector3(0,0,0), earthsurface))
     camera = Camera(16/9, 400, 100, 50, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderPerlin(filePath: str):
     rtworld = hittableList(True)
     pertext = NoiseTexture(4)
-    rtworld.add(Sphere(1000, Vector3(0, -1000, 0), Lambertian(pertext)))
-    rtworld.add(Sphere(2, Vector3(0,2,0), Lambertian(pertext)))
+    rtworld.add(Sphere.CreateSphere(1000, Vector3(0, -1000, 0), Lambertian(pertext)))
+    rtworld.add(Sphere.CreateSphere(2, Vector3(0,2,0), Lambertian(pertext)))
     camera = Camera(16/9, 400, 100, 50, 20, Vector3(13,2,3), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderDielectric(filePath: str):
@@ -76,11 +76,11 @@ def RenderDielectric(filePath: str):
     matleft = Dielectric(1.5)
     matbubble = Dielectric(1/1.5)
     matright = Metal(Vector3(0.8, 0.6, 0.2), 0)
-    rtworld.add(Sphere(100, Vector3(0, -100.5, -1), matground))
-    rtworld.add(Sphere(0.5, Vector3(0,0,-1.2), matcenter))
-    rtworld.add(Sphere(0.5, Vector3(-1,0,-1), matleft))
-    rtworld.add(Sphere(0.4, Vector3(-1,0,-1), matbubble))
-    rtworld.add(Sphere(0.5, Vector3(1.0, 0, -1), matright))
+    rtworld.add(Sphere.CreateSphere(100, Vector3(0, -100.5, -1), matground))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(0,0,-1.2), matcenter))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(-1,0,-1), matleft))
+    rtworld.add(Sphere.CreateSphere(0.4, Vector3(-1,0,-1), matbubble))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(1.0, 0, -1), matright))
     camera = Camera(16/9, 400, 100, 50, 90, Vector3(0,0,0), Vector3(0,0,-1), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderMetals(filePath: str):
@@ -89,10 +89,10 @@ def RenderMetals(filePath: str):
     matcenter = Lambertian(SolidColor(Vector3(0.1, 0.2, 0.5)))
     matleft = Metal(Vector3(0.8, 0.8, 0.8), 0.3)
     matright = Metal(Vector3(0.8, 0.6, 0.2), 1.0)
-    rtworld.add(Sphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
-    rtworld.add(Sphere(0.5, Vector3(0, 0, -1.2), matcenter))
-    rtworld.add(Sphere(0.5, Vector3(-1, 0, -1), matleft))
-    rtworld.add(Sphere(0.5, Vector3(1, 0, -1), matright))
+    rtworld.add(Sphere.CreateSphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(0, 0, -1.2), matcenter))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(-1, 0, -1), matleft))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(1, 0, -1), matright))
     camera = Camera(16/9, 400, 100, 50, 90, Vector3(0,0,0), Vector3(0,0,-1), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderRTOneWeekend(filePath: str):
@@ -106,21 +106,21 @@ def RenderRTOneWeekend(filePath: str):
                 if choosemat < 0.8:
                     albedo = Vector3.RandomVector()
                     spheremat = Lambertian(SolidColor(albedo))
-                    rtworld.add(Sphere(0.2, center, spheremat))
+                    rtworld.add(Sphere.CreateSphere(0.2, center, spheremat))
                 elif choosemat < 0.95:
                     albedo = Vector3.RandomVectorRange(0.5, 1)
                     fuzz = RandomFloatRange(0, 0.5)
                     spheremat = Metal(albedo, fuzz)
-                    rtworld.add(Sphere(0.2, center, spheremat))
+                    rtworld.add(Sphere.CreateSphere(0.2, center, spheremat))
                 else:
                     spheremat = Dielectric(1.5)
-                    world.add(Sphere(0.2, center, spheremat))
+                    world.add(Sphere.CreateSphere(0.2, center, spheremat))
     mat1 = Dielectric(1.5)
-    rtworld.add(Sphere(1.0, Vector3(0,1,0), mat1))
+    rtworld.add(Sphere.CreateSphere(1.0, Vector3(0,1,0), mat1))
     mat2 = Lambertian(SolidColor(Vector3(0.4, 0.2, 0.1)))
-    rtworld.add(Sphere(1.0, Vector3(-4, 1, 0), mat2))
+    rtworld.add(Sphere.CreateSphere(1.0, Vector3(-4, 1, 0), mat2))
     mat3 = Metal(Vector3(0.7, 0.6, 0.5), 0.0)
-    rtworld.add(Sphere(1.0, Vector3(4,1,0), mat3))
+    rtworld.add(Sphere.CreateSphere(1.0, Vector3(4,1,0), mat3))
     camera = Camera(16/9, 1200, 250, 50, 20, Vector3(13,2,3), Vector3(0,0,0), Vector3(0,1,0), 0.6, 10.0, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderLambertianCheckered(filePath: str):
@@ -129,18 +129,18 @@ def RenderLambertianCheckered(filePath: str):
     matright = Lambertian(SolidColor(Vector3(0.1, 0.1, 0.8)))
     matleft = Lambertian(SolidColor(Vector3(0.9, 0.2, 0.1)))
     matcenter = Lambertian(CheckerTexture(0.5, SolidColor(Vector3(0.1, 0.9, 0.1)), SolidColor(Vector3(0.1, 0.1, 0.9))))
-    rtworld.add(Sphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
-    rtworld.add(Sphere(0.5, Vector3(0, 0, -1.2), matcenter))
-    rtworld.add(Sphere(0.5, Vector3(-1, 0, -1), matleft))
-    rtworld.add(Sphere(0.5, Vector3(1, 0, -1), matright))
+    rtworld.add(Sphere.CreateSphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(0, 0, -1.2), matcenter))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(-1, 0, -1), matleft))
+    rtworld.add(Sphere.CreateSphere(0.5, Vector3(1, 0, -1), matright))
     camera = Camera(16/9, 400, 100, 50, 90, Vector3(0,0,0), Vector3(0,0,-1), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)
 def RenderMovingSpheres(filePath: str):
     rtworld = hittableList(True)
     matground = Lambertian(SolidColor(Vector3(0.8, 0.8, 0)))
     matleft = Lambertian(SolidColor(Vector3(0.9, 0.2, 0.1)))
-    rtworld.add(Sphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
-    rtworld.add(Sphere(0.5, Vector3(-1, 0, -1), matleft, True, Vector3(1,0,-1)))
+    rtworld.add(Sphere.CreateSphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
+    rtworld.add(Sphere.CreateMovingSphere(0.5, Vector3(-1, 0, -1), Vector3(1,0,-1), matleft))
     camera = Camera(16/9, 400, 100, 50, 90, Vector3(0,0,0), Vector3(0,0,-1), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
     camera.Render(rtworld)    
 def TextureSelector(isDiffuseLight=False) -> Texture:
@@ -245,7 +245,7 @@ while True:
                 except:
                     pass
                 else:
-                    sphere = Sphere(radius, center, SelectMaterial())
+                    sphere = Sphere.CreateSphere(radius, center, SelectMaterial())
                     break
             inspheremenu = True
             while inspheremenu:
@@ -264,7 +264,7 @@ while True:
                             pass
                         else:
                             inmenuspheremove = False
-                sphere = Sphere(sphere.radius, sphere.center, sphere.mat, True, endcenter)
+                sphere = Sphere.CreateSphere(sphere.radius, sphere.center, sphere.mat, True, endcenter)
             else:
                 print("Command not recognized")
         elif shapetype == "quad" or shapetype == "Quad":

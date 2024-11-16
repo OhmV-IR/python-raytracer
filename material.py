@@ -8,41 +8,55 @@ from hittable import hittable, HitRecord
 from texture import *
 # Base abstract class, has blank methods that each class inheriting from this must define
 class Material(ABC):
+    '''Abstract base class that all materials are derived from.
+    Classes that inherit from this must implement the Scatter and emitted methods'''
     @abstractmethod
     def Scatter(self, ray, rec) -> Ray:
+        ''' Returns a ray scattered off the material given an inciting ray and hit record information'''
         pass
     @abstractmethod
     def emitted(self, u: float, v: float, point: Vector3) -> Vector3:
-        return Vector3(0,0,0)
+        ''' Returns the light emitted from a material from a point and UV coordinates'''
+        pass
 # Matte material
 class Lambertian(Material):
+    '''Matte material with no light emittance and a random outwards direction scatter ray'''
     # Creates a matte material from a texture
-    def __init__(self, texture: Texture):
+    def __init__(self: 'Lambertian', texture: Texture) -> 'Lambertian':
+        '''Creates a lambertian(matte) material from a texture. '''
         self.tex = texture
     # This material does not emit any light
-    def emitted(self, u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Lambertian', u: float, v: float, point: Vector3) -> Vector3:
+        '''Returns the light emittance of the lambertian material for a point and UV coordinates.
+        Lambertian materials do not emit light so this always returns 0,0,0'''
         return Vector3(0,0,0)
     # Scatter reflected rays in a random direction outwards
-    def Scatter(self, ray, rec) -> Ray:
+    def Scatter(self: 'Lambertian', ray, rec) -> Ray:
+        '''This returns a scattered ray given an original inciting ray and hit information'''
         scatterDirection = rec.normal + Vector3.RandomUnitVector()
         if scatterDirection.NearZero():
             scatterDirection = rec.normal
         return Ray(rec.point, scatterDirection, True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)
 # Shiny material with hard reflections, depending on fuzz value
 class Metal(Material):
+    '''Shiny material with no light emittance and reflectance based on fuzz value(less fuzz, sharper reflection)'''
     # Use a color and fuzz value to create the metal material
     def __init__(self, albedo: Vector3, fuzz: float):
+        '''Creates a metal material from a color and a fuzz value between 0 and 1'''
         self.albedo = albedo
         if fuzz < 0:
-            print("fuzz rounded up!")
             self.fuzz = 1
         else:
             self.fuzz = fuzz
     # This material does not emit any light
     def emitted(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Returns the light emittance of the metal material for a point and UV coordinates. 
+        Metal materials do not emit light so this always returns (0,0,0) / black'''
         return Vector3(0,0,0)
     # Reflect rays more/less randomly based on fuzz value
     def Scatter(self, ray, rec) -> Ray:
+        ''' Returns the scattered ray reflecting off the metal material given the inciting ray and hit record information
+        This should produce a sharp / fuzzy reflected ray based on the fuzz value given to the constructor. '''
         reflectedDir = Vector3.Reflect(ray.direction, rec.normal)
         reflectedDir = reflectedDir.UnitVector() + (Vector3.RandomUnitVector() * self.fuzz)
         if reflectedDir.dot(rec.normal) > 0:
@@ -51,17 +65,24 @@ class Metal(Material):
             return Ray(rec.point, reflectedDir, False, self.albedo, ray.time)
 # Material that refracts light
 class Dielectric(Material):
+    '''A material that does not emit any light and refracts rays inwards or reflects them outwards'''
     # Use a refraction index to create the material(how much the light is bent), use snell's law
     def __init__(self, refractionIndex: float):
+        '''Create a dielectric material from a refraction index'''
         self.refractionIndex = refractionIndex
     # Shlick's approximation for reflectance
     def Reflectance(self, cosine, refractionIndex):
+        '''Reflect an incoming ray outwards'''
         r0 = (1 - refractionIndex) / (1 + refractionIndex)
         r0 = r0*r0
         return r0 + (1-r0)*pow((1-cosine), 5)
     def emitted(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Return the light emittance of the dielectric material. The dielectric material does
+        not emit light so this will always return (0,0,0)/black '''
         return Vector3(0,0,0)
     def Scatter(self, ray, rec) -> Ray:
+        '''Scatters an initial ray by either reflecting it off the material or refracting it through the material
+        based on the refraction index'''
         # Randomly choose between reflecting and refracting incoming rays of light
         if rec.frontface:
             refractionIndex = 1.0/self.refractionIndex
@@ -77,12 +98,16 @@ class Dielectric(Material):
         return Ray(rec.point, direction, True, Vector3(1.0,1.0,1.0), ray.time)
 # This material emits light into the scene
 class DiffuseLight(Material):
+    '''A material that emits light into the scene from a texture'''
     # Use a texture for the color values of the light to emit and their strength
     def __init__(self, tex: Texture):
+        '''Creates a diffuse light material from a texture'''
         self.tex = tex
     # Emit the texture's color value for that point as light
     def emitted(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Emits the light of the color of the texture at the provided point and UV coordinates'''
         return self.tex.Value(u, v, point)
     # Never reflect rays, other values here are just random placeholders
-    def Scatter(self, ray, rec) -> Vector3:
-        return Ray(Vector3(1,1,1), Vector3(1,1,1), False, Vector3(1,1,1), 1)
+    def Scatter(self, ray, rec) -> Ray:
+        '''This material does not scatter light therefore this function will always return a ray with the scattered property set to false'''
+        return Ray.CreateNullRay()

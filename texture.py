@@ -9,14 +9,18 @@ import rtutils
 import PIL.Image
 # Code to import image, and fetch colors from it
 class RTImage:
-    def __init__(self, path: str):
+    '''Helper class for ImageTexture, holds an image'''
+    def __init__(self, path: str) -> 'RTImage':
+        '''Import an image from a path'''
         self.image = PIL.Image.open(path)
         if self.image.width == 0 and self.image.height == 0:
             self.image = None
-    def GetPixelColor(self, x: int, y: int):
+    def GetPixelColor(self, x: int, y: int) -> Vector3:
+        '''Get the color of a pixel from the xy coordinates'''
         return self.image.getpixel((x, y))
     @staticmethod
-    def Clamp(x: int, low: int, high: int):
+    def Clamp(x: int, low: int, high: int) -> int:
+        '''Clamp a value between a low(inclusive) and a high(exclusive) where x is an integer'''
         if x < low:
             return low
         if x < high:
@@ -25,7 +29,9 @@ class RTImage:
             return high-1
 # Class to generate perlin noise
 class PerlinNoise:
+    '''Class for perlin noise texture data, the texture class is NoiseTexture. 256 points with trilinear interpolation'''
     def __init__(self):
+        '''Create a perlin noise texture'''
         # Create 256 random unit vectors between -1 and 1
         self.pointCount = 256
         self.randvec = []
@@ -36,7 +42,8 @@ class PerlinNoise:
         self.permY = PerlinNoise.PerlinGeneratePerm(self.pointCount)
         self.permZ = PerlinNoise.PerlinGeneratePerm(self.pointCount)
         
-    def Noise(self, point: Vector3):
+    def Noise(self, point: Vector3) -> Vector3:
+        '''Pick a random strength from the point where the hit occured'''
         # Pick a strength using the 3 lists of strengths and the point where the hit occurred
         u = point.x - floor(point.x)
         v = point.y - floor(point.y)
@@ -72,6 +79,7 @@ class PerlinNoise:
         return PerlinNoise.PerlinInterpolation(c, u, v, w)
     # Repeadeately call the noise function to smooth out the texture even further
     def Turbulence(self, point: Vector3, depth: int):
+        '''Repedeatly calls the noise function to achieve a smoother texture'''
         accum = 0.0
         tempPoint = point
         weight = 1.0
@@ -81,7 +89,8 @@ class PerlinNoise:
             tempPoint *= 2
         return fabs(accum)
     @staticmethod
-    def PerlinGeneratePerm(pointcount: int):
+    def PerlinGeneratePerm(pointcount: int) -> list:
+        '''Creates a list of pointcount length which is scrambled and is filled with random numbers'''
         p = []
         # Generate an ascending list of numbers and then shuffle them
         for i in range(0, pointcount):
@@ -89,7 +98,8 @@ class PerlinNoise:
         p = PerlinNoise.Permute(p, pointcount)
         return p
     @staticmethod
-    def Permute(p, pointcount: int):
+    def Permute(p: list, pointcount: int) -> list:
+        '''Shuffles strength list p of length pointcount'''
         # Function to shuffle strength lists
         for i in range(pointcount-1, 1, -1):
             target = rtutils.RandomInteger(0, i)
@@ -99,6 +109,7 @@ class PerlinNoise:
         return p
     @staticmethod
     def PerlinInterpolation(c, u, v, w):
+        '''Trilinear interpolation which aids to further smooth out the texture'''
         # Trilinear interpolation to smooth out the perlin texture
         uu = u*u*(3-2*u)
         vv = v*v*(3-2*v)
@@ -112,22 +123,29 @@ class PerlinNoise:
         return accum
 # Base texture class to define the Value method that each individual texture sets
 class Texture:
+    '''Base texture class that all textures inherit from. All textures must implement the Value method which returns the color value for a specified 2D uv and 3d point'''
     @abstractmethod
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
         pass
 # Always return a specified RGB color through this texture
 class SolidColor(Texture):
+    '''A solid color texture that always returns a static color'''
     def __init__(self, albedo: Vector3):
+        '''Creates a solid color texture from an albedo color'''
         self.albedo = albedo
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Returns the albedo of the texture'''
         return self.albedo
 # Combine 2 textures to make a checkered pattern and choose between the two based on the location of the hit
 class CheckerTexture(Texture):
+    '''A checkered texture that combines two other textures in a checkered pattern'''
     def __init__(self, scale: float, even: Texture, odd: Texture):
+        '''Creates a checkered texture from two other textures and a pattern scale'''
         self.invScale = 1.0 / scale
         self.even = even
         self.odd = odd
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Either returns the value of the even or odd texture depending on the hit location to form a checkered pattern'''
         xInteger = int(floor(self.invScale * point.x))
         yInteger = int(floor(self.invScale * point.y))
         zInteger = int(floor(self.invScale * point.z))
@@ -138,11 +156,14 @@ class CheckerTexture(Texture):
             return self.odd.Value(u, v, point)
 # Use an image for the color values of the object
 class ImageTexture(Texture):
+    '''A texture that allows an image to be projected onto objects'''
     # Get the string path of the image to use
     def __init__(self, filepath: str):
+        '''Creates an image texture from the path of the image'''
         self.img = RTImage(filepath)
     # Map the 2D location on the object that was hit to pixel coordinates on the image and return the color value from the image
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Returns the color of the image at the 2D UV coordinates'''
         if self.img.image.height <= 0:
             return Vector3(0,1,1)
         u = Interval(0,1).Clamp(u)
@@ -154,10 +175,13 @@ class ImageTexture(Texture):
         return Vector3(colorscale * pixelColor[0], colorscale * pixelColor[1], colorscale * pixelColor[2])
 # Create a texture from perlin noise(blocks of random color)
 class NoiseTexture(Texture):
+    '''A perlin noise texture, see the PerlinNoise class for the implementation of the math'''
     # Use a scale value to define how large the blocks are
     def __init__(self, scale: float):
+        '''Creates a perlin texture from the scale, the smaller the scale the more grainy it will look'''
         self.noise = PerlinNoise()
         self.scale = scale
     # Return a heavily scrambled and interpolated random color from the perlin noise function
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
+        '''Returns the value of the perlin noise texture at a point using a grey baseline'''
         return Vector3(0.5, 0.5, 0.5) * (1 + sin(self.scale * point.z + 10 * self.noise.Turbulence(point, 7)))

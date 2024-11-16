@@ -5,7 +5,9 @@ from interval import Interval
 from vector3 import Vector3
 from rtutils import *
 class Camera:
+    '''Point of view from which scenes are rendered to create an image output'''
     def Render(self, world: hittableList):
+        '''Renders a hittableList scene and outputs the image to a file in PPM format'''
         logFile = open('logfile.txt', 'w')
         outputFile = open(self.outputLocation, 'w')
         outputFile.write("P3\n" + str(self.imageWidth) + " " + str(self.imageHeight) + "\n255\n")
@@ -23,6 +25,7 @@ class Camera:
         point = Vector3.RandomInUnitDisk()
         return self.cameraCenter + (self.defocusDiskU * point.x) + (self.defocusDiskV * point.y)
     def GetRay(self, i: int, j: int) -> Ray:
+        '''Creates a ray from pixel coordinates of the image'''
         offset = self.SampleSquare()
         pixelSample = self.pixel00Location + (self.pixelDeltaWidthVector * (i + offset.x)) + (self.pixelDeltaHeightVector * (j + offset.y))
         if self.defocusAngle <= 0:
@@ -33,8 +36,10 @@ class Camera:
         rayTime = RandomFloat()
         return Ray(rayOrigin, rayDirection, False, Vector3(0,0,0), rayTime)
     def SampleSquare(self) -> Vector3:
+        '''Creates a square from where samples will be taken to reduce noise / floating point errors and produce a clearer image'''
         return Vector3(RandomFloat() - 0.5, RandomFloat() - 0.5, 0)
     def __init__(self, aspectRatio=16/9, imageWidth=400, samplesPerPixel=10, maxDepth=10, vfov=90, lookfrom=Vector3(0,0,0), lookat=Vector3(0,0,-1), vup=Vector3(0,1,0), defocusAngle=0, focusDistance=10, backgroundColor=Vector3(0.0, 0.0, 1.0), outputLocation="output.ppm"):
+        '''Creates a new camera from an aspect ratio, image width(height is determined from the width), sample count, maximum scatter rays, FOV, origin, look direction and camera upwards vector, defocus angle, focus distance, background color and output file location'''
         self.samplesPerPixel=samplesPerPixel
         self.sampleScale = 1.0 / samplesPerPixel
         self.maxDepth = maxDepth
@@ -66,10 +71,12 @@ class Camera:
         self.defocusRadius = self.focusDistance * tan(DegreesToRadians(self.defocusAngle / 2))
         self.defocusDiskU = self.u * self.defocusRadius
         self.defocusDiskV = self.v * self.defocusRadius
-    def RayColor(self, ray: Ray, depth: int, world: hittableList):
+    def RayColor(self, ray: Ray, depth: int, world: hittableList) -> Vector3:
+        '''Gets the color of a ray by setting it out into the scene with a depth(maximum number of scattered rays)
+        Depth is a major performance factor to consider, if renders are taking too long consider lowering it'''
         if depth <= 0:
             return Vector3(0,0,0)
-        rec = world.hit(ray, Interval(0.001, infinity))
+        rec = world.hit(ray, Interval(0.0001, infinity))
         if rec.hit == True:
             emissionColor = rec.mat.emitted(rec.u, rec.v, rec.point)
             scatteredRay = rec.mat.Scatter(ray, rec)
