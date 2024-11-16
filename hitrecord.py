@@ -1,7 +1,7 @@
 from vector3 import Vector3
 from ray import Ray
 class HitRecord:
-    __slots__ = 'point', 'normal', 't', 'frontface', 'hit', 'mat'
+    __slots__ = 'point', 'normal', 't', 'frontface', 'hit', 'mat', 'u', 'v'
     def __init__(self, point: Vector3, normal: Vector3, t: float, frontface: bool, hit: bool, mat=None):
         '''Creates a HitRecord which stores some hit data'''
         self.point = point
