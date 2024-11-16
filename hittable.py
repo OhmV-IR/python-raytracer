@@ -16,6 +16,7 @@ class hittable(ABC):
     def hit(self, ray: Ray, t: Interval) -> HitRecord:
         pass
 class hittableList(hittable):
+    __slots__ = 'root', 'hittablelist', 'boundingBox'
     '''A class which contains a list of hittable objects, has a bounding box and qualifies as a hittable object itself'''
     def __init__(self, root=False):
         '''Creates a list of hittable objects, if this is your scene, set root to true'''
@@ -42,6 +43,7 @@ class hittableList(hittable):
 
 class BVHNode(hittable):
     '''A bounding volume hierarchy node that takes a list of hittable objects and splits them into sublists, improving performance'''
+    __slots__ = 'boundingBox', 'left', 'right'
     def __init__(self, hittableArr, startIndex, endIndex):
         '''Creates a bounding volume hierarchy from a list of hittable objects and a start-end index showing which objects should be used in the hittable list'''
         self.boundingBox = hittableArr[startIndex].boundingBox
@@ -106,6 +108,7 @@ class BVHNode(hittable):
 
 class Translate(hittable):
     '''Translates a hittable object and it's bounding box by a vector offset'''
+    __slots__ = 'offset', 'boundingBox', 'object'
     def __init__(self, object: hittable, offset: Vector3):
         '''Creates the translated object from the original object and a vector offset'''
         self.offset = offset

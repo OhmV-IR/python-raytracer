@@ -4,6 +4,7 @@ from hitrecord import HitRecord
 from vector3 import Vector3
 class AABB:
     ''' Bounding boxes for easy hit/miss checks, helps with performance'''
+    __slots__ = 'x','y','z'
     def __add__(self: 'AABB', offset: Vector3):
         '''Offsets/moves the box by a vector'''
         return AABB(self.x + offset.x, self.y + offset.y, self.z + offset.z)

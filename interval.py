@@ -4,6 +4,7 @@
 from enum import Enum
 class Interval:
     '''A class that contains a minimum and maximum value representing a range'''
+    __slots__ = 'min', 'max', 'aabbBoxHit'
     def __add__(self, displacement: float):
         '''Shifts the entire interval by a displacement'''
         return Interval(self.min + displacement, self.max + displacement)

@@ -6,6 +6,7 @@ from vector3 import Vector3
 from rtutils import *
 class Camera:
     '''Point of view from which scenes are rendered to create an image output'''
+    __slots__ = 'samplesPerPixel', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV'
     def Render(self, world: hittableList):
         '''Renders a hittableList scene and outputs the image to a file in PPM format'''
         logFile = open('logfile.txt', 'w')

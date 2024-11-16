@@ -6,6 +6,7 @@ from interval import Interval
 import rtutils
 class Vector3:
     '''Class containing 3 floats in a xyz structure. Can be used to represent positions, directions, RGB colors .etc'''
+    __slots__ = 'x','y','z'
     # Constructor
     def __init__(self: 'Vector3', x: float, y: float, z: float) -> 'Vector3':
         '''Creates a Vector3 from the x y and z float values'''

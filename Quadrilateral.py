@@ -10,6 +10,7 @@ from ray import Ray
 from interval import Interval
 from rtutils import fmin, fmax
 class Quad(hittable):
+    __slots__ = 'Q', 'u', 'v', 'mat'
     def __init__(self, Q: Vector3, u: Vector3, v: Vector3, mat: Material):
         '''Creates a 2D quadrilateral from the starting corner(Q), a vector representing the first side(u), 
         and a vector representing the second side(v)'''

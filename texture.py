@@ -10,6 +10,7 @@ import PIL.Image
 # Code to import image, and fetch colors from it
 class RTImage:
     '''Helper class for ImageTexture, holds an image'''
+    __slots__ = 'image'
     def __init__(self, path: str) -> 'RTImage':
         '''Import an image from a path'''
         self.image = PIL.Image.open(path)
@@ -30,6 +31,7 @@ class RTImage:
 # Class to generate perlin noise
 class PerlinNoise:
     '''Class for perlin noise texture data, the texture class is NoiseTexture. 256 points with trilinear interpolation'''
+    __slots__ = 'pointCount', 'randvec', 'permX', 'permY', 'permZ'
     def __init__(self):
         '''Create a perlin noise texture'''
         # Create 256 random unit vectors between -1 and 1
@@ -129,6 +131,7 @@ class Texture:
         pass
 # Always return a specified RGB color through this texture
 class SolidColor(Texture):
+    __slots__ = 'albedo'
     '''A solid color texture that always returns a static color'''
     def __init__(self, albedo: Vector3):
         '''Creates a solid color texture from an albedo color'''
@@ -139,6 +142,7 @@ class SolidColor(Texture):
 # Combine 2 textures to make a checkered pattern and choose between the two based on the location of the hit
 class CheckerTexture(Texture):
     '''A checkered texture that combines two other textures in a checkered pattern'''
+    __slots__ = 'invScale', 'even', 'odd'
     def __init__(self, scale: float, even: Texture, odd: Texture):
         '''Creates a checkered texture from two other textures and a pattern scale'''
         self.invScale = 1.0 / scale
@@ -157,6 +161,7 @@ class CheckerTexture(Texture):
 # Use an image for the color values of the object
 class ImageTexture(Texture):
     '''A texture that allows an image to be projected onto objects'''
+    __slots__ = 'img'
     # Get the string path of the image to use
     def __init__(self, filepath: str):
         '''Creates an image texture from the path of the image'''
@@ -176,6 +181,7 @@ class ImageTexture(Texture):
 # Create a texture from perlin noise(blocks of random color)
 class NoiseTexture(Texture):
     '''A perlin noise texture, see the PerlinNoise class for the implementation of the math'''
+    __slots__ = 'scale', 'noise'
     # Use a scale value to define how large the blocks are
     def __init__(self, scale: float):
         '''Creates a perlin texture from the scale, the smaller the scale the more grainy it will look'''

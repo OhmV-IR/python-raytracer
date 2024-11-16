@@ -3,6 +3,7 @@
 # Ray class
 from vector3 import Vector3
 class Ray:
+    __slots__ = 'origin', 'direction', 'scattered', 'attenuation', 'time'
     def __init__(self, origin: Vector3, direction: Vector3, scattered=False, attenuation=Vector3(0,0,0), time=0):
         self.origin = origin
         self.time = time

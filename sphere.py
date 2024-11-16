@@ -8,6 +8,7 @@ from material import Material
 from aabb import AABB
 class Sphere(hittable):
     '''Sphere object'''
+    __slots__ = 'radius', 'center', 'mat', 'isMoving', 'box1', 'box2', 'boundingBox', 'center2', 'centerVec'
     @staticmethod
     def CreateSphere(radius: float, center: Vector3, mat=None):
         '''Creates a sphere using a radius and center.

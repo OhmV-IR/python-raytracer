@@ -21,6 +21,7 @@ class Material(ABC):
 # Matte material
 class Lambertian(Material):
     '''Matte material with no light emittance and a random outwards direction scatter ray'''
+    __slots__ = 'texture'
     # Creates a matte material from a texture
     def __init__(self: 'Lambertian', texture: Texture) -> 'Lambertian':
         '''Creates a lambertian(matte) material from a texture. '''
@@ -40,6 +41,7 @@ class Lambertian(Material):
 # Shiny material with hard reflections, depending on fuzz value
 class Metal(Material):
     '''Shiny material with no light emittance and reflectance based on fuzz value(less fuzz, sharper reflection)'''
+    __slots__ = 'albedo', 'fuzz'
     # Use a color and fuzz value to create the metal material
     def __init__(self, albedo: Vector3, fuzz: float):
         '''Creates a metal material from a color and a fuzz value between 0 and 1'''
@@ -66,6 +68,7 @@ class Metal(Material):
 # Material that refracts light
 class Dielectric(Material):
     '''A material that does not emit any light and refracts rays inwards or reflects them outwards'''
+    __slots__ = 'refractionIndex'
     # Use a refraction index to create the material(how much the light is bent), use snell's law
     def __init__(self, refractionIndex: float):
         '''Create a dielectric material from a refraction index'''
@@ -99,6 +102,7 @@ class Dielectric(Material):
 # This material emits light into the scene
 class DiffuseLight(Material):
     '''A material that emits light into the scene from a texture'''
+    __slots__ = 'tex'
     # Use a texture for the color values of the light to emit and their strength
     def __init__(self, tex: Texture):
         '''Creates a diffuse light material from a texture'''
