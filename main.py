@@ -8,6 +8,7 @@ from texture import SolidColor, CheckerTexture, ImageTexture, Texture, NoiseText
 from Quadrilateral import Quad
 from sphere import Sphere
 from hittable import *
+from multiprocessing import *
 world = hittableList(True)
 def RenderCornellEmpty(filePath: str):
     rtworld = hittableList(True)
