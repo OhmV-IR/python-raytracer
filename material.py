@@ -60,7 +60,7 @@ class Metal(Material):
         ''' Returns the scattered ray reflecting off the metal material given the inciting ray and hit record information
         This should produce a sharp / fuzzy reflected ray based on the fuzz value given to the constructor. '''
         reflectedDir = Vector3.Reflect(ray.direction, rec.normal)
-        reflectedDir = reflectedDir.UnitVector() + (Vector3.RandomUnitVector() * self.fuzz)
+        reflectedDir = reflectedDir.UnitVector() + (Vector3.MultiplyScalar(Vector3.RandomUnitVector(), self.fuzz))
         if reflectedDir.dot(rec.normal) > 0:
             return Ray(rec.point, reflectedDir, True, self.albedo, ray.time)
         else:
@@ -70,11 +70,11 @@ class Dielectric(Material):
     '''A material that does not emit any light and refracts rays inwards or reflects them outwards'''
     __slots__ = 'refractionIndex'
     # Use a refraction index to create the material(how much the light is bent), use snell's law
-    def __init__(self, refractionIndex: float):
+    def __init__(self, refractionIndex: float) -> 'Dielectric':
         '''Create a dielectric material from a refraction index'''
         self.refractionIndex = refractionIndex
     # Shlick's approximation for reflectance
-    def Reflectance(self, cosine, refractionIndex):
+    def Reflectance(self, cosine, refractionIndex) -> float:
         '''Reflect an incoming ray outwards'''
         r0 = (1 - refractionIndex) / (1 + refractionIndex)
         r0 = r0*r0

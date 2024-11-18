@@ -57,7 +57,7 @@ def RenderCornellBoxesTranslate(filePath: str):
     camera.Render(rtworld)
 def RenderEarth(filePath: str):
     rtworld = hittableList(True)
-    earthtex = ImageTexture("earthmap.jpg")
+    earthtex = ImageTexture("imagetex.jpeg")
     earthsurface = Lambertian(earthtex)
     rtworld.add(Sphere.CreateSphere(2, Vector3(0,0,0), earthsurface))
     camera = Camera(16/9, 400, 100, 50, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)

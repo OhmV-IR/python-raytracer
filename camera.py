@@ -20,15 +20,15 @@ class Camera:
                 for s in range(0,self.samplesPerPixel):
                     ray = self.GetRay(i, j)
                     color += self.RayColor(ray, self.maxDepth, world)
-                color = color * self.sampleScale
+                color = Vector3.MultiplyScalar(color, self.sampleScale)
                 outputFile.write(color.ToRgbString())
     def DefocusDiskSample(self):
         point = Vector3.RandomInUnitDisk()
-        return self.cameraCenter + (self.defocusDiskU * point.x) + (self.defocusDiskV * point.y)
+        return self.cameraCenter + (Vector3.MultiplyScalar(self.defocusDiskU, point.x)) + (Vector3.MultiplyScalar(self.defocusDiskV, point.y))
     def GetRay(self, i: int, j: int) -> Ray:
         '''Creates a ray from pixel coordinates of the image'''
         offset = self.SampleSquare()
-        pixelSample = self.pixel00Location + (self.pixelDeltaWidthVector * (i + offset.x)) + (self.pixelDeltaHeightVector * (j + offset.y))
+        pixelSample = self.pixel00Location + (Vector3.MultiplyScalar(self.pixelDeltaWidthVector, (i + offset.x))) + (Vector3.MultiplyScalar(self.pixelDeltaHeightVector, (j + offset.y)))
         if self.defocusAngle <= 0:
             rayOrigin = self.cameraCenter
         else:
@@ -59,19 +59,19 @@ class Camera:
         self.w = (lookfrom - lookat).UnitVector()
         self.u = vup.cross(self.w)
         self.v = self.w.cross(self.u)
-        self.viewportHeightVector = self.v.Negative() * self.viewportHeight
+        self.viewportHeightVector = Vector3.MultiplyScalar(self.v.Negative(), self.viewportHeight)
         self.imageHeight = int(self.imageWidth / self.aspectRatio)
         if self.imageHeight < 1:
             self.imageHeight = 1
         self.viewportWidth = self.viewportHeight * (float(self.imageWidth)/self.imageHeight)
-        self.viewportWidthVector = self.u * self.viewportWidth
-        self.pixelDeltaWidthVector = self.viewportWidthVector / self.imageWidth
-        self.pixelDeltaHeightVector = self.viewportHeightVector / self.imageHeight
-        self.viewportUpperLeft = self.cameraCenter - (self.w * self.focusDistance) - self.viewportWidthVector / 2 - self.viewportHeightVector / 2
-        self.pixel00Location = self.viewportUpperLeft + (self.pixelDeltaWidthVector + self.pixelDeltaHeightVector) * 0.5
+        self.viewportWidthVector = Vector3.MultiplyScalar(self.u, self.viewportWidth)
+        self.pixelDeltaWidthVector = Vector3.DivideScalar(self.viewportWidthVector, self.imageWidth)
+        self.pixelDeltaHeightVector = Vector3.DivideScalar(self.viewportHeightVector, self.imageHeight)
+        self.viewportUpperLeft = self.cameraCenter - (Vector3.MultiplyScalar(self.w, self.focusDistance)) - Vector3.DivideScalar(self.viewportWidthVector, 2) - Vector3.DivideScalar(self.viewportHeightVector, 2)
+        self.pixel00Location = self.viewportUpperLeft + Vector3.MultiplyScalar(self.pixelDeltaWidthVector + self.pixelDeltaHeightVector, 0.5)
         self.defocusRadius = self.focusDistance * tan(DegreesToRadians(self.defocusAngle / 2))
-        self.defocusDiskU = self.u * self.defocusRadius
-        self.defocusDiskV = self.v * self.defocusRadius
+        self.defocusDiskU = Vector3.MultiplyScalar(self.u, self.defocusRadius)
+        self.defocusDiskV = Vector3.MultiplyScalar(self.v, self.defocusRadius)
     def RayColor(self, ray: Ray, depth: int, world: hittableList) -> Vector3:
         '''Gets the color of a ray by setting it out into the scene with a depth(maximum number of scattered rays)
         Depth is a major performance factor to consider, if renders are taking too long consider lowering it'''
@@ -84,7 +84,7 @@ class Camera:
             if not scatteredRay.scattered:
                 return emissionColor
             else:
-                scatterColor = scatteredRay.attenuation * self.RayColor(scatteredRay, depth-1, world)
+                scatterColor = Vector3.Multiply(scatteredRay.attenuation, self.RayColor(scatteredRay, depth-1, world))
                 return emissionColor + scatterColor
         else:
             return self.backgroundColor

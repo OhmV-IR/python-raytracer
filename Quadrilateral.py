@@ -19,7 +19,7 @@ class Quad(hittable):
         self.u = u
         self.v = v
         n = u.cross(v)
-        self.w = n / n.dot(n)
+        self.w = Vector3.DivideScalar(n, n.dot(n))
         self.normal = n.UnitVector()
         self.D = self.normal.dot(Q)
         self = Quad.ComputeBoundingBox(self)

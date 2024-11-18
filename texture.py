@@ -44,7 +44,7 @@ class PerlinNoise:
         self.permY = PerlinNoise.PerlinGeneratePerm(self.pointCount)
         self.permZ = PerlinNoise.PerlinGeneratePerm(self.pointCount)
         
-    def Noise(self, point: Vector3) -> Vector3:
+    def Noise(self, point: Vector3) -> float:
         '''Pick a random strength from the point where the hit occured'''
         # Pick a strength using the 3 lists of strengths and the point where the hit occurred
         u = point.x - floor(point.x)
@@ -86,9 +86,9 @@ class PerlinNoise:
         tempPoint = point
         weight = 1.0
         for i in range(0,depth):
-            accum += weight * self.Noise(tempPoint)
+            accum += self.Noise(tempPoint) * weight
             weight *= 0.5
-            tempPoint *= 2
+            tempPoint = Vector3.MultiplyScalar(tempPoint, 2)
         return fabs(accum)
     @staticmethod
     def PerlinGeneratePerm(pointcount: int) -> list:
@@ -110,7 +110,7 @@ class PerlinNoise:
             p[target] = tmp
         return p
     @staticmethod
-    def PerlinInterpolation(c, u, v, w):
+    def PerlinInterpolation(c: list, u: float, v: float, w: float) -> float:
         '''Trilinear interpolation which aids to further smooth out the texture'''
         # Trilinear interpolation to smooth out the perlin texture
         uu = u*u*(3-2*u)
@@ -190,4 +190,4 @@ class NoiseTexture(Texture):
     # Return a heavily scrambled and interpolated random color from the perlin noise function
     def Value(self, u: float, v: float, point: Vector3) -> Vector3:
         '''Returns the value of the perlin noise texture at a point using a grey baseline'''
-        return Vector3(0.5, 0.5, 0.5) * (1 + sin(self.scale * point.z + 10 * self.noise.Turbulence(point, 7)))
+        return Vector3.MultiplyScalar(Vector3(0.5, 0.5, 0.5), self.noise.Turbulence(point, 7) * 1 + sin(self.scale * point.z + 10))

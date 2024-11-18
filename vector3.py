@@ -14,27 +14,28 @@ class Vector3:
         self.y = y
         self.z = z
     # Override for + operator
-    def __add__(self: 'Vector3', other: 'Vector3') -> 'Vector3':
+    def __add__(self: 'Vector3', v2: 'Vector3') -> 'Vector3':
         '''Returns the addition of two vectors by adding each coordinate'''
-        return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
-    # Override for - operator
-    def __sub__(self: 'Vector3', other: 'Vector3') -> 'Vector3':
+        return Vector3(self.x + v2.x, self.y + v2.y, self.z + v2.z)
+    def __sub__(self: 'Vector3', v2: 'Vector3') -> 'Vector3':
         '''Returns the subtraction of two vectors by subtracting each coordinate'''
-        return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
-    # Override for * operator
-    def __mul__(self: 'Vector3', other: 'Vector3') -> 'Vector3':
+        return Vector3(self.x - v2.x, self.y - v2.y, self.z - v2.z)
+    @staticmethod
+    def Multiply(v1: 'Vector3', v2: 'Vector3') -> 'Vector3':
         '''Returns the multiplication of a vector and a vector by multiplying each coordinate'''
-        return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
-    def __mul__(self: 'Vector3', other: float) -> 'Vector3':
+        return Vector3(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z)
+    @staticmethod
+    def MultiplyScalar(v1: 'Vector3', f: float) -> 'Vector3':
         '''Returns the multiplication of a vector and a scalar by multiplying each coordinate'''
-        return Vector3(self.x * other, self.y * other, self.z * other)
-    # Override for / operator
-    def __truediv__(self: 'Vector3', other: 'Vector3') -> 'Vector3':
-        '''Returns the division of a vector and a vector by dividing each coordinate'''
-        return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
-    def __truediv__(self: 'Vector3', other: float) -> 'Vector3':
-        '''Returns the division of a vector and a scalar by dividing each coordinate'''
-        return Vector3(self.x / other, self.y / other, self.z / other)
+        return Vector3(v1.x * f, v1.y * f, v1.z * f)
+    @staticmethod
+    def Divide(v1: 'Vector3', v2: 'Vector3') -> 'Vector3':
+        '''Returns the division of 2 vectors by dividing each coordinate'''
+        return Vector3(v1.x / v2.x, v1.y / v2.y, v1.z / v2.z)
+    @staticmethod
+    def DivideScalar(v1: 'Vector3', f: float) -> 'Vector3':
+        '''Returns the division of a vector by a scalar by dividing each coordinate'''
+        return Vector3(v1.x / f, v1.y / f, v1.z / f)
     def ToRgbString(self: 'Vector3'):
         '''Converts an RGB color vector to a string in PPM format that can be written to the image file'''
         intensity = Interval(0.000, 0.999)
@@ -48,16 +49,16 @@ class Vector3:
         gbyte = int(256 * intensity.Clamp(self.y))
         bbyte = int(256 * intensity.Clamp(self.z))
         return str(rbyte) + " " + str(gbyte) + " " + str(bbyte) + "\n"  
-    def LengthSquared(self) -> float:
+    def LengthSquared(self: 'Vector3') -> float:
         '''Returns the length of the vector squared by squaring each coordinate, adding them and returning the result'''
         return self.x * self.x + self.y * self.y + self.z * self.z
-    def Length(self) -> float:
+    def Length(self: 'Vector3') -> float:
         ''' Returns the length of the vector by taking the square root of the LengthSquared operation'''
         return sqrt(self.LengthSquared())
-    def UnitVector(self) -> 'Vector3':
+    def UnitVector(self: 'Vector3') -> 'Vector3':
         '''Turns the vector into a unit vector with a magnitude of 1'''
-        return self / self.Length()
-    def dot(self: 'Vector3', other: 'Vector3') -> 'Vector3':
+        return Vector3.DivideScalar(self,self.Length())
+    def dot(self: 'Vector3', other: 'Vector3') -> float:
         '''Multiplies the vector by another vector and returns the addition of the coordinates of the result'''
         return self.x * other.x + self.y * other.y + self.z * other.z
     def Negative(self: 'Vector3') -> 'Vector3':
@@ -109,7 +110,7 @@ class Vector3:
     @staticmethod
     def Reflect(v1: 'Vector3', v2: 'Vector3') -> 'Vector3':
         '''Reflects a vector v1 along a normal v2'''
-        return v1 - v2 * v1.dot(v2) * 2
+        return v1 - Vector3.MultiplyScalar(v2, v1.dot(v2) * 2)
     def NearZero(self: 'Vector3') -> bool:
         '''Returns true if the vector is close to 0(prone to floating point errors)'''
         almostzero = 0.0001
@@ -120,6 +121,6 @@ class Vector3:
     def Refract(self: 'Vector3', normal: 'Vector3', etaiOverEtat: float) -> 'Vector3':
         '''Refracts the vector using a normal and a refraction index'''
         cosTheta = rtutils.fmin(self.Negative().dot(normal), 1.0)
-        rOutPerp = (self + normal * cosTheta) * etaiOverEtat
-        rOutParallel = normal * -sqrt(fabs(1.0 - rOutPerp.LengthSquared()))
+        rOutPerp = Vector3.MultiplyScalar((self + Vector3.MultiplyScalar(normal, cosTheta)), etaiOverEtat)
+        rOutParallel = Vector3.MultiplyScalar(normal, -sqrt(fabs(1.0 - rOutPerp.LengthSquared())))
         return rOutPerp + rOutParallel

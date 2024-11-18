@@ -16,4 +16,4 @@ class Ray:
         and the scattered attribute set to false'''
         return Ray(Vector3(0,0,0), Vector3(0,0,0))
     def PointAtTime(self, time: float):
-        return self.origin + self.direction * time
+        return self.origin + Vector3.MultiplyScalar(self.direction, time)

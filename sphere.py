@@ -38,7 +38,7 @@ class Sphere(hittable):
     def SphereCenter(self, time):
         '''Returns the center of the sphere at a specified time.
         sphere.isMoving MUST be set to TRUE'''
-        return self.center + self.centerVec * time
+        return self.center + Vector3.MultiplyScalar(self.centerVec, time)
     def hit(self, ray: Ray, t: Interval) -> HitRecord:
         '''Checks whether or not a ray has hit the object at a specified time interval'''
         if self.isMoving:
@@ -50,16 +50,16 @@ class Sphere(hittable):
         h = ray.direction.dot(oc)
         c = oc.LengthSquared() - self.radius*self.radius
         discriminant = h*h - a*c
-        if discriminant < 0: 
-            return HitRecord(Vector3(0,0,0), 0, 0, False, False, self.mat)
+        if discriminant < 0:
+            return HitRecord.CreateFalseHit()
         sqrtd = sqrt(discriminant)
         root = (h - sqrtd) / a
         if not t.Surrounds(root):
             root = (h + sqrtd) / a
             if not t.Surrounds(root):
-                return HitRecord(Vector3(0,0,0), Vector3(0,0,0), 0, False, False, self.mat)
-        record = HitRecord(ray.PointAtTime(root), (ray.PointAtTime(root) - self.center) / self.radius, root, True, True, self.mat)
-        outwardNormal = (record.point - self.center) / self.radius
+                return HitRecord.CreateFalseHit()
+        record = HitRecord(ray.PointAtTime(root), Vector3.DivideScalar((ray.PointAtTime(root) - self.center), self.radius), root, True, True, self.mat)
+        outwardNormal = Vector3.DivideScalar(record.point - self.center, self.radius)
         record.SetFaceNormal(ray, outwardNormal)
         uv = Sphere.GetSphereUV(outwardNormal)
         record.u = uv.min
