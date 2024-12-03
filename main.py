@@ -232,173 +232,174 @@ def SelectTransform(obj: hittable) -> hittable:
                     pass
         else:
             print("Command not recognized")
-while True:
-    cmdinput = input("Please enter a command:\nadd - add a shape to the scene\nexit - exit the program\nrender - render the scene\npredefined - render a predefined scene\n")
-    if cmdinput == "help":
-        print("add - add a shape to the scene\nexit - exit the program\nrender - render the scene\npredefined - render a predefined scene\n")
-    elif cmdinput == "add":
-        shapetype = input("Please enter one of the following shapes to add to the scene:\nQuad - 2D Quadrilateral shape\n Sphere\nBox\n")
-        if shapetype == "Sphere" or shapetype == "sphere":
+if __name__ == "__main__":
+    while True:
+        cmdinput = input("Please enter a command:\nadd - add a shape to the scene\nexit - exit the program\nrender - render the scene\npredefined - render a predefined scene\n")
+        if cmdinput == "help":
+            print("add - add a shape to the scene\nexit - exit the program\nrender - render the scene\npredefined - render a predefined scene\n")
+        elif cmdinput == "add":
+            shapetype = input("Please enter one of the following shapes to add to the scene:\nQuad - 2D Quadrilateral shape\n Sphere\nBox\n")
+            if shapetype == "Sphere" or shapetype == "sphere":
+                while True:
+                    try:
+                        radius = float(input("Please enter the radius of the sphere: "))
+                        center = Vector3(float(input("Please enter the x coordinate of the sphere's center: ")), float(input("Please enter the y coordinate of the sphere's center: ")), float(input("Please enter the z coordinate of the sphere's center: ")))
+                    except:
+                        pass
+                    else:
+                        sphere = Sphere.CreateSphere(radius, center, SelectMaterial())
+                        break
+                inspheremenu = True
+                while inspheremenu:
+                    spherecmd = input("Please enter a valid entity altering command to modify the sphere, or type done to add it to the scene:\ndone - add the sphere to the scene\ntransform - transform the shape of the sphere and add it to the scene\nmove - add a motion blur effect to the sphere as if it was moving to a location\n")
+                    if spherecmd == "done":
+                        world.add(sphere)
+                        inspheremenu = False
+                    elif spherecmd == "transform":
+                        world.add(SelectTransform(sphere))
+                    elif spherecmd == "move":
+                        inmenuspheremove = True
+                        while inmenuspheremove:
+                            try:
+                                endcenter = Vector3(float(input("Please enter the x coordinate of where the sphere will stop moving: ")), float(input("Please enter the y coordinate of where the sphere will stop moving: ")), float(input("Please enter the z coordinate of where the sphere will stop moving: ")))
+                            except:
+                                pass
+                            else:
+                                inmenuspheremove = False
+                    sphere = Sphere.CreateSphere(sphere.radius, sphere.center, sphere.mat, True, endcenter)
+                else:
+                    print("Command not recognized")
+            elif shapetype == "quad" or shapetype == "Quad":
+                inquadmenu = True
+                while inquadmenu:
+                    try:
+                        qx = float(input("Please enter the x coordinate of the bottom left corner: "))
+                        qy = float(input("Please enter the y coordinate of the bottom left corner: "))
+                        qz = float(input("Please enter the z coordinate of the bottom left corner: "))
+                        ux = float(input("Please enter the x coordinate change of the side going up from the bottom left corner: "))
+                        uy = float(input("Please enter the y coordinate change of the side going up from the bottom left corner: "))
+                        uz = float(input("Please enter the z coordinate change of the side going up from the bottom left corner: "))
+                        vx = float(input("Please enter the x coordinate change of the side going right from the bottom left corner: "))
+                        vy = float(input("Please enter the y coordinate change of the side going right from the bottom left corner: "))
+                        vz = float(input("Please enter the z coordinate change of the side going right from the bottom left corner: "))
+                    except:
+                        pass
+                    else:
+                        break
+                quad = Quad(Vector3(qx,qy,qz), Vector3(ux, uy, uz), Vector3(vx, vy, vz), SelectMaterial())
+                quadcmd = input("Please enter a valid entity altering command to modify the quad, or type done to add it to the scene:\ndone - add the quad to the scene\ntransform - transform the shape of the quad and add it to the scene\n")
+                if quadcmd == "done" or quadcmd == "Done":
+                    world.add(quad)
+                    inquadmenu = False
+                elif quadcmd == "transform" or quadcmd == "Transform":
+                    world.add(SelectTransform(quad))
+                else:
+                    print("Command not recognized")
+            elif shapetype == "box" or shapetype == "Box":
+                inboxmenu = True
+                while inboxmenu:
+                    try:
+                        c1x = float(input("Please enter the x coordinate of the bottom left corner of the box: "))
+                        c1y = float(input("Please enter the y coordinate of the bottom left corner of the box: "))
+                        c1z = float(input("Please enter the z coordinate of the bottom left corner of the box: "))
+                        c2x = float(input("Please enter the x coordinate of the top right corner of the box: "))
+                        c2y = float(input("Please enter the y coordinate of the top right corner of the box: "))
+                        c2z = float(input("Please enter the z coordinate of the top right corner of the box: "))
+                    except:
+                        pass
+                    else:
+                        break
+                box = Quad.Box(Vector3(c1x, c1y, c1z), Vector3(c2x, c2y, c2z), SelectMaterial())
+                boxcmd = input("Please enter a valid entity altering command to modify the box, or type done to add it to the scene:\ndone - add the box to the scene\ntransform - transform the shape of the box and add it to the scene\n")
+                if boxcmd == "done" or boxcmd == "Done":
+                    world.add(box)
+                    inboxmenu = False
+                elif boxcmd == "transform" or boxcmd == "Transform":
+                    world.add(SelectTransform(box))
+                else:
+                    print("Command not recognized")
+            else:
+                print("Shape type not recognized")
+        elif cmdinput == "render" or cmdinput == "Render":
             while True:
                 try:
-                    radius = float(input("Please enter the radius of the sphere: "))
-                    center = Vector3(float(input("Please enter the x coordinate of the sphere's center: ")), float(input("Please enter the y coordinate of the sphere's center: ")), float(input("Please enter the z coordinate of the sphere's center: ")))
-                except:
-                    pass
-                else:
-                    sphere = Sphere.CreateSphere(radius, center, SelectMaterial())
-                    break
-            inspheremenu = True
-            while inspheremenu:
-                spherecmd = input("Please enter a valid entity altering command to modify the sphere, or type done to add it to the scene:\ndone - add the sphere to the scene\ntransform - transform the shape of the sphere and add it to the scene\nmove - add a motion blur effect to the sphere as if it was moving to a location\n")
-                if spherecmd == "done":
-                    world.add(sphere)
-                    inspheremenu = False
-                elif spherecmd == "transform":
-                    world.add(SelectTransform(sphere))
-                elif spherecmd == "move":
-                    inmenuspheremove = True
-                    while inmenuspheremove:
-                        try:
-                            endcenter = Vector3(float(input("Please enter the x coordinate of where the sphere will stop moving: ")), float(input("Please enter the y coordinate of where the sphere will stop moving: ")), float(input("Please enter the z coordinate of where the sphere will stop moving: ")))
-                        except:
-                            pass
-                        else:
-                            inmenuspheremove = False
-                sphere = Sphere.CreateSphere(sphere.radius, sphere.center, sphere.mat, True, endcenter)
-            else:
-                print("Command not recognized")
-        elif shapetype == "quad" or shapetype == "Quad":
-            inquadmenu = True
-            while inquadmenu:
-                try:
-                    qx = float(input("Please enter the x coordinate of the bottom left corner: "))
-                    qy = float(input("Please enter the y coordinate of the bottom left corner: "))
-                    qz = float(input("Please enter the z coordinate of the bottom left corner: "))
-                    ux = float(input("Please enter the x coordinate change of the side going up from the bottom left corner: "))
-                    uy = float(input("Please enter the y coordinate change of the side going up from the bottom left corner: "))
-                    uz = float(input("Please enter the z coordinate change of the side going up from the bottom left corner: "))
-                    vx = float(input("Please enter the x coordinate change of the side going right from the bottom left corner: "))
-                    vy = float(input("Please enter the y coordinate change of the side going right from the bottom left corner: "))
-                    vz = float(input("Please enter the z coordinate change of the side going right from the bottom left corner: "))
+                    aspectRatio = float(input("Please enter the aspect ratio(ex: 16/9 = 1.7778): "))
+                    imgWidth = int(input("Please enter the width of the image: "))
+                    samplesPerPixel = int(input("Please enter the number of samples per pixel: "))
+                    maxrayrecursion = int(input("Please enter the max number of recurring rays(reflections of reflections): "))
+                    fov = int(input("Please enter the field of view angle of the camera: "))
+                    camposx = float(input("Please enter the x coordinate location of the camera: "))
+                    camposy = float(input("Please enter the y coordinate location of the camera: "))
+                    camposz = float(input("Please enter the z coordinate location of the camera: "))
+                    camerapos = Vector3(camposx, camposy, camposz)
+                    camlookx = float(input("Please enter the x coordinate of where the camera is looking: "))
+                    camlooky = float(input("Please enter the y coordinate of where the camera is looking: "))
+                    camlookz = float(input("Please enter the z coordinate of where the camera is looking: "))
+                    cameralookpoint = Vector3(camlookx, camlooky, camlookz)
+                    camupx = float(input("Please enter the x coordinate of the camera's up vector(normally 0): "))
+                    camupy = float(input("Please enter the y coordinate of the camera's up vector(normally 1): "))
+                    camupz = float(input("Please enter the z coordinate of the camera's up vector(normally 0): "))
+                    cameraup = Vector3(camupx, camupy, camupz)
+                    defocusAngle = float(input("Please enter the defocusing angle of the camera: "))
+                    focusDist = float(input("Please enter the focusing distance of the camera(also known as depth of field): "))
+                    bgr = float(input("Please enter the red value of the background color as a percentage(ex: 0.59): "))
+                    bgg = float(input("Please enter the green value of the background color as a percentage(ex: 0.19): "))
+                    bgb = float(input("Please enter the blue value of the background color as a percentage(ex: 0.99): "))
+                    if bgr < 0 or bgr > 1 or bgg < 0 or bgg > 1 or bgb < 0 or bgb > 1:
+                        raise ValueError
+                    bgcolor = Vector3(bgr, bgg, bgb)
+                    outputFile = input("Please enter the path of the file to output the result to: ")
                 except:
                     pass
                 else:
                     break
-            quad = Quad(Vector3(qx,qy,qz), Vector3(ux, uy, uz), Vector3(vx, vy, vz), SelectMaterial())
-            quadcmd = input("Please enter a valid entity altering command to modify the quad, or type done to add it to the scene:\ndone - add the quad to the scene\ntransform - transform the shape of the quad and add it to the scene\n")
-            if quadcmd == "done" or quadcmd == "Done":
-                world.add(quad)
-                inquadmenu = False
-            elif quadcmd == "transform" or quadcmd == "Transform":
-                world.add(SelectTransform(quad))
-            else:
-                print("Command not recognized")
-        elif shapetype == "box" or shapetype == "Box":
-            inboxmenu = True
-            while inboxmenu:
-                try:
-                    c1x = float(input("Please enter the x coordinate of the bottom left corner of the box: "))
-                    c1y = float(input("Please enter the y coordinate of the bottom left corner of the box: "))
-                    c1z = float(input("Please enter the z coordinate of the bottom left corner of the box: "))
-                    c2x = float(input("Please enter the x coordinate of the top right corner of the box: "))
-                    c2y = float(input("Please enter the y coordinate of the top right corner of the box: "))
-                    c2z = float(input("Please enter the z coordinate of the top right corner of the box: "))
-                except:
-                    pass
-                else:
-                    break
-            box = Quad.Box(Vector3(c1x, c1y, c1z), Vector3(c2x, c2y, c2z), SelectMaterial())
-            boxcmd = input("Please enter a valid entity altering command to modify the box, or type done to add it to the scene:\ndone - add the box to the scene\ntransform - transform the shape of the box and add it to the scene\n")
-            if boxcmd == "done" or boxcmd == "Done":
-                world.add(box)
-                inboxmenu = False
-            elif boxcmd == "transform" or boxcmd == "Transform":
-                world.add(SelectTransform(box))
-            else:
-                print("Command not recognized")
-        else:
-            print("Shape type not recognized")
-    elif cmdinput == "render" or cmdinput == "Render":
-        while True:
-            try:
-                aspectRatio = float(input("Please enter the aspect ratio(ex: 16/9 = 1.7778): "))
-                imgWidth = int(input("Please enter the width of the image: "))
-                samplesPerPixel = int(input("Please enter the number of samples per pixel: "))
-                maxrayrecursion = int(input("Please enter the max number of recurring rays(reflections of reflections): "))
-                fov = int(input("Please enter the field of view angle of the camera: "))
-                camposx = float(input("Please enter the x coordinate location of the camera: "))
-                camposy = float(input("Please enter the y coordinate location of the camera: "))
-                camposz = float(input("Please enter the z coordinate location of the camera: "))
-                camerapos = Vector3(camposx, camposy, camposz)
-                camlookx = float(input("Please enter the x coordinate of where the camera is looking: "))
-                camlooky = float(input("Please enter the y coordinate of where the camera is looking: "))
-                camlookz = float(input("Please enter the z coordinate of where the camera is looking: "))
-                cameralookpoint = Vector3(camlookx, camlooky, camlookz)
-                camupx = float(input("Please enter the x coordinate of the camera's up vector(normally 0): "))
-                camupy = float(input("Please enter the y coordinate of the camera's up vector(normally 1): "))
-                camupz = float(input("Please enter the z coordinate of the camera's up vector(normally 0): "))
-                cameraup = Vector3(camupx, camupy, camupz)
-                defocusAngle = float(input("Please enter the defocusing angle of the camera: "))
-                focusDist = float(input("Please enter the focusing distance of the camera(also known as depth of field): "))
-                bgr = float(input("Please enter the red value of the background color as a percentage(ex: 0.59): "))
-                bgg = float(input("Please enter the green value of the background color as a percentage(ex: 0.19): "))
-                bgb = float(input("Please enter the blue value of the background color as a percentage(ex: 0.99): "))
-                if bgr < 0 or bgr > 1 or bgg < 0 or bgg > 1 or bgb < 0 or bgb > 1:
-                    raise ValueError
-                bgcolor = Vector3(bgr, bgg, bgb)
-                outputFile = input("Please enter the path of the file to output the result to: ")
-            except:
-                pass
-            else:
+            camera = Camera(aspectRatio, imgWidth, samplesPerPixel, maxrayrecursion, fov, camerapos, cameralookpoint, cameraup, defocusAngle, focusDist, bgcolor, outputFile)
+            camera.Render(world)
+        elif cmdinput == "predefined" or cmdinput == "Predefined":
+            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Translated\nLambertian Checkered Spheres\nMoving Spheres\n")
+            if predefinedtype == "empty cornell box" or predefinedtype == "Empty Cornell box" or predefinedtype == "Empty Cornell Box":
+                filePath = input("Please enter the location to output the cornell box render to: ")
+                RenderCornellEmpty(filePath)
                 break
-        camera = Camera(aspectRatio, imgWidth, samplesPerPixel, maxrayrecursion, fov, camerapos, cameralookpoint, cameraup, defocusAngle, focusDist, bgcolor, outputFile)
-        camera.Render(world)
-    elif cmdinput == "predefined" or cmdinput == "Predefined":
-        predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Translated\nLambertian Checkered Spheres\nMoving Spheres\n")
-        if predefinedtype == "empty cornell box" or predefinedtype == "Empty Cornell box" or predefinedtype == "Empty Cornell Box":
-            filePath = input("Please enter the location to output the cornell box render to: ")
-            RenderCornellEmpty(filePath)
-            break
-        elif predefinedtype == "Boxes in Cornell Box" or predefinedtype == "boxes in cornell box":
-            filePath = input("Please enter the location to output the boxes in cornell box render to: ")
-            RenderCornellBoxes(filePath)
-            break
-        elif predefinedtype == "Earth":
-            filePath = input("Please enter the location to output the earth render to: ")
-            RenderEarth(filePath)
-            break
-        elif predefinedtype == "Perlin Sphere" or predefinedtype == "perlin sphere" or predefinedtype == "Perlin sphere":
-            filePath = input("Please enter the location to output the perlin sphere render to: ")
-            RenderPerlin(filePath)
-            break
-        elif predefinedtype == "Moving Spheres" or predefinedtype == "Moving spheres" or predefinedtype == "moving spheres":
-            filePath = input("Please enter the location to output the render to: ")
-            RenderMovingSpheres(filePath)
-            break
-        elif predefinedtype == "Metals" or predefinedtype == "metals":
-            filePath = input("Please enter the location to output the metals render to: ")
-            RenderMetals(filePath)
-            break
-        elif predefinedtype == "Dielectrics" or predefinedtype == "dielectrics":
-            filePath = input("Please enter the location to output the dielectrics render to: ")
-            RenderDielectric(filePath)
-            break
-        elif predefinedtype == "RTOneWeekend Final" or predefinedtype == "RTOneWeekend final":
-            filePath = input("Please enter the location to output the ray tracing in one weekend final render to: ")
-            RenderRTOneWeekend(filePath)
-            break
-        elif predefinedtype == "Boxes in Cornell Box Translated":
-            filePath = input("Please enter the location to output the render to: ")
-            RenderCornellBoxesTranslate(filePath)
-            break
-        elif predefinedtype == "Lambertian Checkered Spheres":
-            filePath = input("Please enter the location to output the render to: ")
-            RenderLambertianCheckered(filePath)
+            elif predefinedtype == "Boxes in Cornell Box" or predefinedtype == "boxes in cornell box":
+                filePath = input("Please enter the location to output the boxes in cornell box render to: ")
+                RenderCornellBoxes(filePath)
+                break
+            elif predefinedtype == "Earth":
+                filePath = input("Please enter the location to output the earth render to: ")
+                RenderEarth(filePath)
+                break
+            elif predefinedtype == "Perlin Sphere" or predefinedtype == "perlin sphere" or predefinedtype == "Perlin sphere":
+                filePath = input("Please enter the location to output the perlin sphere render to: ")
+                RenderPerlin(filePath)
+                break
+            elif predefinedtype == "Moving Spheres" or predefinedtype == "Moving spheres" or predefinedtype == "moving spheres":
+                filePath = input("Please enter the location to output the render to: ")
+                RenderMovingSpheres(filePath)
+                break
+            elif predefinedtype == "Metals" or predefinedtype == "metals":
+                filePath = input("Please enter the location to output the metals render to: ")
+                RenderMetals(filePath)
+                break
+            elif predefinedtype == "Dielectrics" or predefinedtype == "dielectrics":
+                filePath = input("Please enter the location to output the dielectrics render to: ")
+                RenderDielectric(filePath)
+                break
+            elif predefinedtype == "RTOneWeekend Final" or predefinedtype == "RTOneWeekend final":
+                filePath = input("Please enter the location to output the ray tracing in one weekend final render to: ")
+                RenderRTOneWeekend(filePath)
+                break
+            elif predefinedtype == "Boxes in Cornell Box Translated":
+                filePath = input("Please enter the location to output the render to: ")
+                RenderCornellBoxesTranslate(filePath)
+                break
+            elif predefinedtype == "Lambertian Checkered Spheres":
+                filePath = input("Please enter the location to output the render to: ")
+                RenderLambertianCheckered(filePath)
+                break
+            else:
+                print("Predefined scene not found")
+        elif cmdinput == "exit":
             break
         else:
-            print("Predefined scene not found")
-    elif cmdinput == "exit":
-        break
-    else:
-        print("Command not recognized, please enter a valid command or type exit to exit the program")
+            print("Command not recognized, please enter a valid command or type exit to exit the program")

@@ -1,27 +1,75 @@
 from math import tan
+import time
 from hittable import hittable, hittableList
 from ray import Ray
 from interval import Interval
 from vector3 import Vector3
 from rtutils import *
+from multiprocessing import *
+from math import ceil
 class Camera:
     '''Point of view from which scenes are rendered to create an image output'''
     __slots__ = 'samplesPerPixel', 'cameraCenter', 'w', 'u', 'v', 'viewportHeightVector', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV'
     def Render(self, world: hittableList):
         '''Renders a hittableList scene and outputs the image to a file in PPM format'''
         logFile = open('logfile.txt', 'w')
+        currentLine = 0
+        processes = list()
+        pipe = Manager().Queue(2)
+        for i in range(0, cpu_count()):
+            process = Process(target=self.RenderLines, args=(currentLine, ceil((self.imageHeight / cpu_count()) * (i+1)), world, pipe, i))
+            process.start()
+            print("Started process " + process.name)
+            processes.append(process)
+            currentLine = ceil((self.imageHeight / cpu_count()) * (i+1)) + 1
+            print(ceil((self.imageHeight / cpu_count()) * (i+1)))
+        colorSegments = list()
+        for i in range(0, cpu_count()):
+            colorSegments.append(list())
+        while(Camera.IsRenderComplete(colorSegments) == False):
+            if(pipe.full()):
+                time.sleep(.005)
+                colors = pipe.get()
+                time.sleep(.005)
+                sectionNumber = pipe.get()
+                print("Process " + str(sectionNumber) + " finished in main thread")
+                colorSegments[sectionNumber] = colors
+            time.sleep(0.25)
         outputFile = open(self.outputLocation, 'w')
         outputFile.write("P3\n" + str(self.imageWidth) + " " + str(self.imageHeight) + "\n255\n")
-        for j in range(0, self.imageHeight):
-            logFile.write('Lines remaining: ' + str(self.imageHeight - j))
-            print('Lines remaining: ' + str(self.imageHeight - j))
-            for i in range(0,self.imageWidth):
-                color = Vector3(0,0,0)
-                for s in range(0,self.samplesPerPixel):
-                    ray = self.GetRay(i, j)
-                    color += self.RayColor(ray, self.maxDepth, world)
-                color = Vector3.MultiplyScalar(color, self.sampleScale)
-                outputFile.write(color.ToRgbString())
+        for i in range(0, len(colorSegments)):
+            for j in range(0, len(colorSegments[i])):
+                outputFile.write(colorSegments[i][j].ToRgbString())
+        outputFile.close()
+        print("Render complete")
+
+    def RenderLines(self: 'Camera', yStart: int, yEnd: int, world: hittableList, writePipe, sectionNumber: int):
+        '''Renders a section of the image and writes it to the output file once all the pixels in the section have been rendered. xStart and xEnd are inclusive.'''
+        colors = list()
+        for y in range(yStart, yEnd + 1):
+            print("Line rendered")
+            for x in range(0, self.imageWidth + 1):
+                colors.append(self.RenderPixel(x,y, world))
+        print(current_process().name + " finished")
+        writePipe.put(colors)
+        print("put colors")
+        time.sleep(.005)
+        writePipe.put(sectionNumber)
+        print("Put section number and colors into queue")
+    @staticmethod
+    def IsRenderComplete(colorSegments: list):
+        for i in range(0, len(colorSegments)):
+            if(len(colorSegments[i]) == 0):
+                return False
+        return True
+    def RenderPixel(self: 'Camera', x: int, y: int, world: hittableList) -> Vector3:
+        '''Renders a pixel and returns the RGB color inside of a vector3 structure'''
+        color = Vector3(0,0,0)
+        for s in range(0,self.samplesPerPixel):
+            ray = self.GetRay(x, y)
+            color += self.RayColor(ray, self.maxDepth, world)
+        color = Vector3.MultiplyScalar(color, self.sampleScale)
+        return color
     def DefocusDiskSample(self):
         point = Vector3.RandomInUnitDisk()
         return self.cameraCenter + (Vector3.MultiplyScalar(self.defocusDiskU, point.x)) + (Vector3.MultiplyScalar(self.defocusDiskV, point.y))
@@ -60,6 +108,7 @@ class Camera:
         self.u = vup.cross(self.w)
         self.v = self.w.cross(self.u)
         self.viewportHeightVector = Vector3.MultiplyScalar(self.v.Negative(), self.viewportHeight)
+        self.imageHeight = 232
         self.imageHeight = int(self.imageWidth / self.aspectRatio)
         if self.imageHeight < 1:
             self.imageHeight = 1
