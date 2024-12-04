@@ -21,7 +21,7 @@ class Camera:
             process.start()
             print("Started process " + process.name)
             processes.append(process)
-            currentLine = ceil((self.imageHeight / cpu_count()) * (i+1)) + 1
+            currentLine = ceil((self.imageHeight / cpu_count()) * (i+1))
             print(ceil((self.imageHeight / cpu_count()) * (i+1)))
         colorSegments = list()
         for i in range(0, cpu_count()):
