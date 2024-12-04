@@ -17,7 +17,7 @@ class Camera:
         processes = list()
         pipe = Manager().Queue(2)
         for i in range(0, cpu_count()):
-            process = Process(target=self.RenderLines, args=(currentLine, ceil((self.imageHeight / cpu_count()) * (i+1)), world, pipe, i))
+            process = Process(target=self.RenderLines, args=(currentLine, ceil(self.imageHeight * ((i+1)/cpu_count())), world, pipe, i))
             process.start()
             print("Started process " + process.name)
             processes.append(process)
@@ -30,7 +30,7 @@ class Camera:
             if(pipe.full()):
                 time.sleep(.005)
                 colors = pipe.get()
-                time.sleep(.005)
+                time.sleep(.005) # time delay to allow lock on queue to lift
                 sectionNumber = pipe.get()
                 print("Process " + str(sectionNumber) + " finished in main thread")
                 colorSegments[sectionNumber] = colors
@@ -43,12 +43,14 @@ class Camera:
         outputFile.close()
         print("Render complete")
 
-    def RenderLines(self: 'Camera', yStart: int, yEnd: int, world: hittableList, writePipe, sectionNumber: int):
+    def RenderLines(self: 'Camera', yStart: int, yEnd: int, world: hittableList, writePipe: Queue, sectionNumber: int):
         '''Renders a section of the image and writes it to the output file once all the pixels in the section have been rendered. xStart and xEnd are inclusive.'''
         colors = list()
-        for y in range(yStart, yEnd + 1):
+        print("Ystart of " + current_process().name + " : " + str(yStart))
+        print("Yend of " + current_process().name + " : " + str(yEnd))
+        for y in range(yStart, yEnd):
             print("Line rendered")
-            for x in range(0, self.imageWidth + 1):
+            for x in range(0, self.imageWidth):
                 colors.append(self.RenderPixel(x,y, world))
         print(current_process().name + " finished")
         writePipe.put(colors)
