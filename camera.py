@@ -11,7 +11,7 @@ class Camera:
     '''Point of view from which scenes are rendered to create an image output'''
     __slots__ = 'samplesPerPixel', 'cameraCenter', 'w', 'u', 'v', 'viewportHeightVector', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV'
     def Render(self, world: hittableList):
-        '''Renders a hittableList scene and outputs the image to a file in PPM format'''
+        '''Renders a hittableList scene and outputs the image to a file in PPM format using multithreading which uses all cpu cores'''
         logFile = open('logfile.txt', 'w')
         currentLine = 0
         processes = list()
@@ -44,7 +44,7 @@ class Camera:
         print("Render complete")
 
     def RenderLines(self: 'Camera', yStart: int, yEnd: int, world: hittableList, writePipe: Queue, sectionNumber: int):
-        '''Renders a section of the image and writes it to the output file once all the pixels in the section have been rendered. xStart and xEnd are inclusive.'''
+        '''Renders a section of the image and writes it to the writepipe along with the provided section number once it is finished rendering. yStart is inclusive, yEnd is exclusive.'''
         colors = list()
         print("Ystart of " + current_process().name + " : " + str(yStart))
         print("Yend of " + current_process().name + " : " + str(yEnd))
@@ -60,6 +60,7 @@ class Camera:
         print("Put section number and colors into queue")
     @staticmethod
     def IsRenderComplete(colorSegments: list):
+        '''Checks if the colorSegments array has been filled indicating that the render is complete'''
         for i in range(0, len(colorSegments)):
             if(len(colorSegments[i]) == 0):
                 return False
