@@ -107,14 +107,14 @@ class BVHNode(hittable):
         return BVHNode.BoxCompare(hittable1, hittable2, 2)
 
 class Translate(hittable):
-    '''Translates a hittable object and it's bounding box by a vector offset'''
+    '''Translates a hittable object and its bounding box by a vector offset'''
     __slots__ = 'offset', 'boundingBox', 'object'
-    def __init__(self, object: hittable, offset: Vector3):
+    def __init__(self: 'Translate', object: hittable, offset: Vector3):
         '''Creates the translated object from the original object and a vector offset'''
         self.offset = offset
         self.boundingBox = object.boundingBox + offset
         self.object = object
-    def hit(self, ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'Translate', ray: Ray, t: Interval) -> HitRecord:
         '''Checks if a ray has hit the translated object and returns the hit record information if it has'''
         offsetRay = Ray(ray.origin - self.offset, ray.direction, False, Vector3(0,0,0), ray.time)
         hitrec = self.object.hit(offsetRay, t)
@@ -122,4 +122,47 @@ class Translate(hittable):
             return hitrec
         else:
             hitrec.point += self.offset
+            return hitrec
+class Rotate(hittable):
+    '''Rotates a hittable object and its bounding box'''
+    __slots__ = "sinTheta", "cosTheta", "boundingBox", "object"
+    def __init__(self: 'Rotate', angle: float, object: hittable) -> 'Rotate':
+        rads = DegreesToRadians(angle)
+        self.sinTheta = sin(rads)
+        self.cosTheta = cos(rads)
+        self.boundingBox = object.boundingBox
+        self.object = object
+        mini = Vector3(float('inf'), float('inf'), float('inf'))
+        maxi = Vector3(float('-inf'), float('-inf'), float('-inf'))
+        for i in range(0,2):
+            for j in range(0,2):
+                for k in range(0,2):
+                    x = i * self.boundingBox.x.max + (1-i) * self.boundingBox.x.min
+                    y = j * self.boundingBox.y.max + (1-j) * self.boundingBox.y.min
+                    z = k * self.boundingBox.z.max + (1-k) * self.boundingBox.z.min
+                    newx = self.cosTheta * x + self.sinTheta * z
+                    newz = -self.sinTheta * x + self.cosTheta * z
+                    test = Vector3(newx, y, newz)
+                    for c in range(0,3):
+                        if(c == 0):
+                            mini.x = fmin(mini.x, test.x)
+                            maxi.x = fmax(maxi.x, test.x)
+                        if(c == 1):
+                            mini.y = fmin(mini.y, test.y)
+                            maxi.y = fmax(maxi.y, test.y)
+                        if(c == 2):
+                            mini.z = fmin(mini.z, test.z)
+                            maxi.z = fmax(maxi.z, test.z)
+        self.boundingBox = AABB.CreateBoundingBoxFromPoints(mini, maxi)
+                        
+    def hit(self: 'Rotate', ray: Ray, t: Interval) -> HitRecord:
+        origin = Vector3((self.cosTheta * ray.origin.x) - (self.sinTheta * ray.origin.z), ray.origin.y, (self.sinTheta * ray.origin.x) + (self.cosTheta * ray.origin.z))
+        direction = Vector3((self.cosTheta * ray.direction.x) - (self.sinTheta * ray.direction.z), ray.direction.y, (self.sinTheta * ray.direction.x) + (self.cosTheta * ray.direction.z))
+        rotatedRay = Ray(origin, direction, False, Vector3(0,0,0), ray.time)
+        hitrec = self.object.hit(rotatedRay, t)
+        if(hitrec.hit == False):
+            return hitrec
+        else:
+            hitrec.point = Vector3((self.cosTheta * hitrec.point.x) + (self.sinTheta * hitrec.point.z), hitrec.point.y, (-self.sinTheta * hitrec.point.x) + (self.cosTheta * hitrec.point.z))
+            hitrec.normal = Vector3((self.cosTheta * hitrec.normal.x) + (self.sinTheta * hitrec.normal.z), hitrec.normal.z, (-self.sinTheta * hitrec.normal.x) + (self.cosTheta * hitrec.normal.z))
             return hitrec

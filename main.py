@@ -40,7 +40,7 @@ def RenderCornellBoxes(filePath: str):
     rtworld.add(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white))
     camera = Camera(1,600, 200, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
-def RenderCornellBoxesTranslate(filePath: str):
+def RenderCornellBoxesTransforms(filePath: str):
     rtworld = hittableList(True)
     red = Lambertian(SolidColor(Vector3(.65, .05, .05)))
     white = Lambertian(SolidColor(Vector3(.73, .73, .73)))
@@ -52,8 +52,8 @@ def RenderCornellBoxesTranslate(filePath: str):
     rtworld.add(Quad(Vector3(0,0,0), Vector3(555,0,0), Vector3(0,0,555), white))
     rtworld.add(Quad(Vector3(555,555,555), Vector3(-555,0,0), Vector3(0,0,-555), white))
     rtworld.add(Quad(Vector3(0,0,555), Vector3(555,0,0), Vector3(0,555,0), white))
-    rtworld.add(Translate(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white), Vector3(0, 0, 100)))
-    rtworld.add(Translate(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white), Vector3(0,0,100)))
+    rtworld.add(Rotate(15, Translate(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white), Vector3(0, 0, 100))))
+    rtworld.add(Rotate(-18, Translate(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white), Vector3(0,0,100))))
     camera = Camera(1,600, 100, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
 def RenderEarth(filePath: str):
@@ -356,7 +356,7 @@ if __name__ == "__main__":
             camera = Camera(aspectRatio, imgWidth, samplesPerPixel, maxrayrecursion, fov, camerapos, cameralookpoint, cameraup, defocusAngle, focusDist, bgcolor, outputFile)
             camera.Render(world)
         elif cmdinput == "predefined" or cmdinput == "Predefined":
-            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Translated\nLambertian Checkered Spheres\nMoving Spheres\n")
+            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Transformed\nLambertian Checkered Spheres\nMoving Spheres\n")
             if predefinedtype == "empty cornell box" or predefinedtype == "Empty Cornell box" or predefinedtype == "Empty Cornell Box":
                 filePath = input("Please enter the location to output the cornell box render to: ")
                 RenderCornellEmpty(filePath)
@@ -389,9 +389,9 @@ if __name__ == "__main__":
                 filePath = input("Please enter the location to output the ray tracing in one weekend final render to: ")
                 RenderRTOneWeekend(filePath)
                 break
-            elif predefinedtype == "Boxes in Cornell Box Translated":
+            elif predefinedtype == "Boxes in Cornell Box Transformed":
                 filePath = input("Please enter the location to output the render to: ")
-                RenderCornellBoxesTranslate(filePath)
+                RenderCornellBoxesTransforms(filePath)
                 break
             elif predefinedtype == "Lambertian Checkered Spheres":
                 filePath = input("Please enter the location to output the render to: ")
