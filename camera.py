@@ -7,6 +7,12 @@ from vector3 import Vector3
 from rtutils import *
 from multiprocessing import *
 from math import ceil
+
+class ProcessResult:
+    __slots__ = 'colors', 'sectionNumber'
+    def __init__(self: 'ProcessResult', sectionNumber: int, colors: list):
+        self.colors = colors
+        self.sectionNumber = sectionNumber
 class Camera:
     '''Point of view from which scenes are rendered to create an image output'''
     __slots__ = 'samplesPerPixel', 'cameraCenter', 'w', 'u', 'v', 'viewportHeightVector', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV'
@@ -15,7 +21,7 @@ class Camera:
         logFile = open('logfile.txt', 'w')
         currentLine = 0
         processes = list()
-        pipe = Manager().Queue(2)
+        pipe = Manager().Queue(1)
         for i in range(0, cpu_count()):
             process = Process(target=self.RenderLines, args=(currentLine, ceil(self.imageHeight * ((i+1)/cpu_count())), world, pipe, i))
             process.start()
@@ -29,11 +35,9 @@ class Camera:
         while(Camera.IsRenderComplete(colorSegments) == False):
             if(pipe.full()):
                 time.sleep(.005)
-                colors = pipe.get()
-                time.sleep(.005) # time delay to allow lock on queue to lift
-                sectionNumber = pipe.get()
-                print("Process " + str(sectionNumber) + " finished in main thread")
-                colorSegments[sectionNumber] = colors
+                result = pipe.get()
+                print("Process " + str(result.sectionNumber) + " finished in main thread")
+                colorSegments[result.sectionNumber] = result.colors
             time.sleep(0.25)
         outputFile = open(self.outputLocation, 'w')
         outputFile.write("P3\n" + str(self.imageWidth) + " " + str(self.imageHeight) + "\n255\n")
@@ -53,11 +57,8 @@ class Camera:
             for x in range(0, self.imageWidth):
                 colors.append(self.RenderPixel(x,y, world))
         print(current_process().name + " finished")
-        writePipe.put(colors)
-        print("put colors")
-        time.sleep(.005)
-        writePipe.put(sectionNumber)
-        print("Put section number and colors into queue")
+        writePipe.put(ProcessResult(sectionNumber, colors))
+        print("put result")
     @staticmethod
     def IsRenderComplete(colorSegments: list):
         '''Checks if the colorSegments array has been filled indicating that the render is complete'''
