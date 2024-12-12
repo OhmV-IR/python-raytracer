@@ -5,7 +5,7 @@ from camera import Camera
 from rtutils import *
 from material import Dielectric, Lambertian, Metal, DiffuseLight, Material
 from texture import SolidColor, CheckerTexture, ImageTexture, Texture, NoiseTexture
-from Quadrilateral import Quad
+from Quadrilateral import Quad, Triangle
 from sphere import Sphere
 from hittable import *
 from multiprocessing import *
@@ -143,7 +143,13 @@ def RenderMovingSpheres(filePath: str):
     rtworld.add(Sphere.CreateSphere(100.0, Vector3(0.0, -100.5, -1.0), matground))
     rtworld.add(Sphere.CreateMovingSphere(0.5, Vector3(-1, 0, -1), Vector3(1,0,-1), matleft))
     camera = Camera(16/9, 400, 100, 50, 90, Vector3(0,0,0), Vector3(0,0,-1), Vector3(0,1,0), 0, 10, Vector3(0.8, 0.8,1), filePath)
-    camera.Render(rtworld)    
+    camera.Render(rtworld)
+def RenderTriangle(filePath: str):
+    rtworld = hittableList(True)
+    objMat = Lambertian(SolidColor(Vector3(0.75, 0, 0.5)))
+    rtworld.add(Triangle(Vector3(-2, -1, 0), Vector3(4,0,0), Vector3(0,2,0), objMat))
+    camera = Camera(1, 400, 4, 4, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.9, 0.9, 0.9), filePath)
+    camera.Render(rtworld)
 def TextureSelector(isDiffuseLight=False) -> Texture:
     while True:
         texturetype = input("Please enter a texture type:\nSolid Color\nCheckered\nImage\nNoise\n")
@@ -356,7 +362,7 @@ if __name__ == "__main__":
             camera = Camera(aspectRatio, imgWidth, samplesPerPixel, maxrayrecursion, fov, camerapos, cameralookpoint, cameraup, defocusAngle, focusDist, bgcolor, outputFile)
             camera.Render(world)
         elif cmdinput == "predefined" or cmdinput == "Predefined":
-            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Transformed\nLambertian Checkered Spheres\nMoving Spheres\n")
+            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Transformed\nLambertian Checkered Spheres\nMoving Spheres\nTriangle\n")
             if predefinedtype == "empty cornell box" or predefinedtype == "Empty Cornell box" or predefinedtype == "Empty Cornell Box":
                 filePath = input("Please enter the location to output the cornell box render to: ")
                 RenderCornellEmpty(filePath)
@@ -396,6 +402,10 @@ if __name__ == "__main__":
             elif predefinedtype == "Lambertian Checkered Spheres":
                 filePath = input("Please enter the location to output the render to: ")
                 RenderLambertianCheckered(filePath)
+                break
+            elif predefinedtype == "Triangle":
+                filePath = input("Please enter the location to output the render to: ")
+                RenderTriangle(filePath)
                 break
             else:
                 print("Predefined scene not found")
