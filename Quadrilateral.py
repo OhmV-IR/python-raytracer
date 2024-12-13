@@ -110,8 +110,10 @@ class Ellipse(hittable):
     '''An ellipse class made up of a center point, a width and a height'''
     def __init__(self: 'Ellipse', center: Vector3, width: float, height: float, mat: Material):
         '''Create an ellipse from the center point, the width and the height of the ellipse.'''
-        self.quad = Quad(center, Vector3(width, 0, 0), Vector3(0, height, 0), mat)
-        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
+        widthvec = Vector3(width, 0, 0)
+        heightvec = Vector3(0, height, 0)
+        self.quad = Quad(center, widthvec, heightvec, mat)
+        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - widthvec - heightvec, center + widthvec + heightvec)
         AABB.PadToMinimums(self.boundingBox)
     def hit(self: 'Ellipse', ray: Ray, t: Interval) -> HitRecord:
         '''Checks whether or not a ray hit the ellipse and returns hit record information if it does'''
@@ -142,9 +144,11 @@ class Annulus(hittable):
     '''A ring created from a center point, a width, and a height plus an inner radius. Similar shape to the ellipse.'''
     def __init__(self: 'Annulus', center: Vector3, width: float, height: float, innerRadius: float, mat: Material) -> 'Annulus':
         '''Creates a ring from a center point, a width, a height and an inner radius'''
-        self.quad = Quad(center, Vector3(width, 0, 0), Vector3(0, height, 0), mat)
+        widthvec = Vector3(width, 0, 0)
+        heightvec = Vector3(0, height, 0)
+        self.quad = Quad(center, widthvec, heightvec, mat)
         self.innerRadius = innerRadius
-        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
+        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - widthvec - heightvec, center + widthvec + heightvec)
         AABB.PadToMinimums(self.boundingBox)
     def hit(self: 'Annulus', ray: Ray, t: Interval) -> HitRecord:
         '''Checks whether or not a ray hit the ring and returns hit record information if it does'''
