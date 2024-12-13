@@ -9,7 +9,7 @@ from hitrecord import HitRecord
 from ray import Ray
 from interval import Interval
 from rtutils import fmin, fmax
-
+from math import sqrt
 class Quad(hittable):
     __slots__ = 'Q', 'u', 'v', 'mat', 'w', 'normal', 'D', 'boundingBox'
     def __init__(self: 'Quad', Q: Vector3, u: Vector3, v: Vector3, mat: Material) -> 'Quad':
@@ -104,9 +104,9 @@ class Triangle(hittable):
             return hitrecord
 
 class Ellipse(hittable):
-    def __init__(self: 'Ellipse', center: Vector3, sideA: Vector3, sideB: Vector3, mat: Material):
-        self.quad = Quad(center, sideA, sideB, mat)
-        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - sideA - sideB, center + sideA + sideB)
+    def __init__(self: 'Ellipse', center: Vector3, width: Vector3, height: Vector3, mat: Material):
+        self.quad = Quad(center, width, height, mat)
+        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
         AABB.PadToMinimums(self.boundingBox)
     def hit(self: 'Ellipse', ray: Ray, t: Interval) -> HitRecord:
         '''Checks whether or not a ray hit the box and returns hit record information if it does'''
@@ -124,9 +124,39 @@ class Ellipse(hittable):
         hitrecord.SetFaceNormal(ray, self.quad.normal)
         hitrecord = self.hitAB(alpha, beta, hitrecord)
         return hitrecord
-    def hitAB(self: 'Ellipse', a: float, b: float, rec: HitRecord) -> HitRecord:
+    def hitAB(self: 'Ellipse', a: float, b: float, inputHitrec: HitRecord) -> HitRecord:
         if ((a*a + b*b) > 1):
             return HitRecord.CreateFalseHit()
-        rec.u = a/2 + 0.5
-        rec.v = b/2 + 0.5
-        return rec
+        inputHitrec.u = a/2 + 0.5
+        inputHitrec.v = b/2 + 0.5
+        return inputHitrec
+    
+class Annulus(hittable):
+    def __init__(self: 'Annulus', center: Vector3, width: Vector3, height: Vector3, innerRadius: float, mat: Material) -> 'Annulus':
+        self.quad = Quad(center, width, height, mat)
+        self.innerRadius = innerRadius
+        self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
+        AABB.PadToMinimums(self.boundingBox)
+    def hit(self: 'Annulus', ray: Ray, t: Interval) -> HitRecord:
+        denom = self.quad.normal.dot(ray.direction)
+        if fabs(denom) < 1e-8:
+            return HitRecord.CreateFalseHit()
+        hittime = (self.quad.D - self.quad.normal.dot(ray.origin)) / denom
+        if not t.Contains(hittime):
+            return HitRecord.CreateFalseHit()
+        intersection = ray.PointAtTime(hittime)
+        planarHitpointVector = intersection - self.quad.Q
+        alpha = self.quad.w.dot(planarHitpointVector.cross(self.quad.v))
+        beta = self.quad.w.dot(self.quad.u.cross(planarHitpointVector))
+        hitrecord = HitRecord(intersection, Vector3(0,0,0), hittime, False, True, self.quad.mat)
+        hitrecord.SetFaceNormal(ray, self.quad.normal)
+        hitrecord = self.hitAB(alpha, beta, hitrecord)
+        return hitrecord
+    def hitAB(self: 'Annulus', a: float, b: float, inputHitrec: HitRecord) -> HitRecord:
+        centerDistance = sqrt(a*a + b*b)
+        if((centerDistance < self.innerRadius) or (centerDistance > 1)):
+            return HitRecord.CreateFalseHit()
+        else:
+            inputHitrec.u = a/2 + 0.5
+            inputHitrec.v = b/2 + 0.5
+            return inputHitrec
