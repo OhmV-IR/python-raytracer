@@ -70,9 +70,11 @@ class Quad(hittable):
         return sides
     
 class Triangle(hittable):
+    '''A triangle formed from a starting corner(bottom left corner), a height and a base'''
     __slots__ = 'boundingBox', 'quad'
-    def __init__(self: 'Triangle', startCorner: Vector3, side1: Vector3, side2: Vector3, mat: Material) -> 'Quad':
-        self.quad = Quad(startCorner, side1, side2, mat)
+    def __init__(self: 'Triangle', startCorner: Vector3, base: float, height: float, mat: Material) -> 'Quad':
+        '''Creates a triangle from the bottom left starting corner, the length of the base and the height of the '''
+        self.quad = Quad(startCorner, Vector3(base, 0, 0), Vector3(0, height, 0), mat)
         self.boundingBox = self.quad.boundingBox
     def hitAB(self: 'Triangle', a: float, b: float, inputHitrec: HitRecord) -> HitRecord:
         '''Determines whether or not the triangle was hit from alpha and beta values from quadrilateral hit function'''
@@ -83,7 +85,7 @@ class Triangle(hittable):
             inputHitrec.v = b
             return inputHitrec
     def hit(self: 'Triangle', ray: Ray, t: Interval) -> HitRecord:
-        '''Checks whether or not a ray hit the box and returns hit record information if it does'''
+        '''Checks whether or not a ray hit the triangle and returns the hit information if it did'''
         denom = self.quad.normal.dot(ray.direction)
         if fabs(denom) < 1e-8:
             return HitRecord.CreateFalseHit()
@@ -104,12 +106,15 @@ class Triangle(hittable):
             return hitrecord
 
 class Ellipse(hittable):
-    def __init__(self: 'Ellipse', center: Vector3, width: Vector3, height: Vector3, mat: Material):
-        self.quad = Quad(center, width, height, mat)
+    __slots__ = 'quad', 'boundingBox'
+    '''An ellipse class made up of a center point, a width and a height'''
+    def __init__(self: 'Ellipse', center: Vector3, width: float, height: float, mat: Material):
+        '''Create an ellipse from the center point, the width and the height of the ellipse.'''
+        self.quad = Quad(center, Vector3(width, 0, 0), Vector3(0, height, 0), mat)
         self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
         AABB.PadToMinimums(self.boundingBox)
     def hit(self: 'Ellipse', ray: Ray, t: Interval) -> HitRecord:
-        '''Checks whether or not a ray hit the box and returns hit record information if it does'''
+        '''Checks whether or not a ray hit the ellipse and returns hit record information if it does'''
         denom = self.quad.normal.dot(ray.direction)
         if fabs(denom) < 1e-8:
             return HitRecord.CreateFalseHit()
@@ -125,6 +130,7 @@ class Ellipse(hittable):
         hitrecord = self.hitAB(alpha, beta, hitrecord)
         return hitrecord
     def hitAB(self: 'Ellipse', a: float, b: float, inputHitrec: HitRecord) -> HitRecord:
+        '''Determines if the quad hit also hit the ellipse and transforms the UV coordinates for the hit accordingly if it did'''
         if ((a*a + b*b) > 1):
             return HitRecord.CreateFalseHit()
         inputHitrec.u = a/2 + 0.5
@@ -132,12 +138,16 @@ class Ellipse(hittable):
         return inputHitrec
     
 class Annulus(hittable):
-    def __init__(self: 'Annulus', center: Vector3, width: Vector3, height: Vector3, innerRadius: float, mat: Material) -> 'Annulus':
-        self.quad = Quad(center, width, height, mat)
+    __slots__ = 'quad', 'innerRadius', 'boundingBox'
+    '''A ring created from a center point, a width, and a height plus an inner radius. Similar shape to the ellipse.'''
+    def __init__(self: 'Annulus', center: Vector3, width: float, height: float, innerRadius: float, mat: Material) -> 'Annulus':
+        '''Creates a ring from a center point, a width, a height and an inner radius'''
+        self.quad = Quad(center, Vector3(width, 0, 0), Vector3(0, height, 0), mat)
         self.innerRadius = innerRadius
         self.boundingBox = AABB.CreateBoundingBoxFromPoints(center - width - height, center + width + height)
         AABB.PadToMinimums(self.boundingBox)
     def hit(self: 'Annulus', ray: Ray, t: Interval) -> HitRecord:
+        '''Checks whether or not a ray hit the ring and returns hit record information if it does'''
         denom = self.quad.normal.dot(ray.direction)
         if fabs(denom) < 1e-8:
             return HitRecord.CreateFalseHit()
@@ -153,6 +163,7 @@ class Annulus(hittable):
         hitrecord = self.hitAB(alpha, beta, hitrecord)
         return hitrecord
     def hitAB(self: 'Annulus', a: float, b: float, inputHitrec: HitRecord) -> HitRecord:
+        '''Determines if the quad hit also hit the ring and transforms the UV coordinates for the hit accordingly if it did'''
         centerDistance = sqrt(a*a + b*b)
         if((centerDistance < self.innerRadius) or (centerDistance > 1)):
             return HitRecord.CreateFalseHit()

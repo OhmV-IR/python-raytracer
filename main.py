@@ -147,19 +147,19 @@ def RenderMovingSpheres(filePath: str):
 def RenderTriangle(filePath: str):
     rtworld = hittableList(True)
     objMat = Lambertian(SolidColor(Vector3(0.75, 0, 0.5)))
-    rtworld.add(Triangle(Vector3(-2, -1, 0), Vector3(4,0,0), Vector3(0,2,0), objMat))
+    rtworld.add(Triangle(Vector3(-2, -1, 0), 4, 0, objMat))
     camera = Camera(1, 400, 4, 4, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.9, 0.9, 0.9), filePath)
     camera.Render(rtworld)
 def RenderEllipse(filePath: str):
     rtworld = hittableList(True)
     objMat = Lambertian(SolidColor(Vector3(0.75, 0, 0.5)))
-    rtworld.add(Ellipse(Vector3(0,0,0), Vector3(-2,0,0), Vector3(0,1,0), objMat))
+    rtworld.add(Ellipse(Vector3(0,0,0), -2, 1, objMat))
     camera = Camera(1, 400, 4, 4, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.9, 0.9, 0.9), filePath)
     camera.Render(rtworld)
 def RenderAnnulus(filePath: str):
     rtworld = hittableList(True)
     objMat = Lambertian(SolidColor(Vector3(0.75, 0, 0.5)))
-    rtworld.add(Annulus(Vector3(0,0,0), Vector3(-2,0,0), Vector3(0,1,0), 0.6, objMat))
+    rtworld.add(Annulus(Vector3(0,0,0), -2, 1, 0.6, objMat))
     camera = Camera(1, 400, 4, 4, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.9, 0.9, 0.9), filePath)
     camera.Render(rtworld)
 def TextureSelector(isDiffuseLight=False) -> Texture:
