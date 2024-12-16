@@ -9,7 +9,7 @@ from vector3 import Vector3
 class ConstantMedium(hittable):
     '''A volume that can represent smoke, fog, mist .etc'''
     __slots__ = 'boundingBox', 'boundary', 'negInverseDensity', 'phaseFunction'
-    def __init__(self: 'ConstantMedium', density: float, boundary: hittable, texture: Texture):
+    def __init__(self: 'ConstantMedium', density: float, boundary: hittable, texture: Texture) -> 'ConstantMedium':
         '''Creates a volume from a density, a boundary which the volume occupies and a texture'''
         self.boundary = boundary
         self.negInverseDensity = -1/density

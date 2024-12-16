@@ -13,24 +13,24 @@ class hittable(ABC):
     '''The abstract class which all objects which a ray can hit are derived from. All hittable objects implement the hit method which will return whether or not
     an inputted ray has hit the object.'''
     @abstractmethod
-    def hit(self, ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'hittable', ray: Ray, t: Interval) -> HitRecord:
         pass
 class hittableList(hittable):
     __slots__ = 'root', 'hittablelist', 'boundingBox'
     '''A class which contains a list of hittable objects, has a bounding box and qualifies as a hittable object itself'''
-    def __init__(self, root=False):
+    def __init__(self: 'hittableList', root=False) -> 'hittableList':
         '''Creates a list of hittable objects, if this is your scene, set root to true'''
         self.root = root
         self.hittablelist = []
         self.boundingBox = None
-    def add(self, obj: hittable):
+    def add(self: 'hittableList', obj: hittable):
         '''Adds an object to the hittable list and expands the bounding box of the hittable list to encompass the new object'''
         self.hittablelist.append(obj)
         if self.boundingBox == None:
             self.boundingBox = obj.boundingBox
         else:
             self.boundingBox = AABB.CreateBoundingBoxFromBoxes(self.boundingBox, obj.boundingBox)
-    def hit(self, ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'hittableList', ray: Ray, t: Interval) -> HitRecord:
         '''Checks if a provided ray has hit any encompassed object and returns the hitrecord data from the hit of that object if so'''
         closest = t.max
         currentreturn = HitRecord.CreateFalseHit()
@@ -44,7 +44,7 @@ class hittableList(hittable):
 class BVHNode(hittable):
     '''A bounding volume hierarchy node that takes a list of hittable objects and splits them into sublists, improving performance'''
     __slots__ = 'boundingBox', 'left', 'right'
-    def __init__(self, hittableArr, startIndex, endIndex):
+    def __init__(self: 'BVHNode', hittableArr: hittableList, startIndex: int, endIndex: int) -> 'BVHNode':
         '''Creates a bounding volume hierarchy from a list of hittable objects and a start-end index showing which objects should be used in the hittable list'''
         self.boundingBox = hittableArr[startIndex].boundingBox
         for i in range(startIndex+1, endIndex):
@@ -67,7 +67,7 @@ class BVHNode(hittable):
             mid = startIndex + objectSpan / 2
             self.left = BVHNode(hittableArr, startIndex, mid)
             self.right = BVHNode(hittableArr, mid, endIndex)
-    def hit(self, ray: Ray, t: Interval) -> HitRecord:
+    def hit(self: 'BVHNode', ray: Ray, t: Interval) -> HitRecord:
         '''Determines if a ray will hit the bounding tree, and then determines which side of the bounding tree it will hit and
         returns that hit record information'''
         boundingBoxHit = self.boundingBox.hit(ray, t)
@@ -109,7 +109,7 @@ class BVHNode(hittable):
 class Translate(hittable):
     '''Translates a hittable object and its bounding box by a vector offset'''
     __slots__ = 'offset', 'boundingBox', 'object'
-    def __init__(self: 'Translate', object: hittable, offset: Vector3):
+    def __init__(self: 'Translate', object: hittable, offset: Vector3) -> 'Translate':
         '''Creates the translated object from the original object and a vector offset'''
         self.offset = offset
         self.boundingBox = object.boundingBox + offset
