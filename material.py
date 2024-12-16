@@ -115,3 +115,15 @@ class DiffuseLight(Material):
     def Scatter(self, ray, rec) -> Ray:
         '''This material does not scatter light therefore this function will always return a ray with the scattered property set to false'''
         return Ray.CreateNullRay()
+class Isotropic(Material):
+    '''Picks a random uniform direction to scatter a ray in'''
+    __slots__ = 'tex'
+    def __init__(self: 'Isotropic', texture: Texture):
+        '''Creates an isotropic material from a source texture'''
+        self.tex = texture
+    def emitted(self: 'Isotropic', u: float, v: float, point: Vector3) -> Vector3:
+        '''This material does not emit light and therefore this function will always return 0,0,0 / black'''
+        return Vector3(0,0,0)
+    def Scatter(self: 'Isotropic', ray: Ray, rec: HitRecord) -> Ray:
+        '''Takes an input ray and hitrecord information and scatters it in a random direction'''
+        return Ray(rec.point, Vector3.RandomUnitVector(), True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)

@@ -9,6 +9,7 @@ from Quadrilateral import Quad, Triangle, Ellipse, Annulus
 from sphere import Sphere
 from hittable import *
 from multiprocessing import *
+from volumes import ConstantMedium
 world = hittableList(True)
 def RenderCornellEmpty(filePath: str):
     rtworld = hittableList(True)
@@ -161,6 +162,22 @@ def RenderAnnulus(filePath: str):
     objMat = Lambertian(SolidColor(Vector3(0.75, 0, 0.5)))
     rtworld.add(Annulus(Vector3(0,0,0), -2, 1, 0.6, objMat))
     camera = Camera(1, 400, 4, 4, 20, Vector3(0,0,12), Vector3(0,0,0), Vector3(0,1,0), 0, 10, Vector3(0.9, 0.9, 0.9), filePath)
+    camera.Render(rtworld)
+def RenderCornellSmoke(filePath: str):
+    rtworld = hittableList(True)
+    red = Lambertian(SolidColor(Vector3(.65, .05, .05)))
+    white = Lambertian(SolidColor(Vector3(.73, .73, .73)))
+    green = Lambertian(SolidColor(Vector3(.12, .45, .15)))
+    light = DiffuseLight(SolidColor(Vector3(21,21,21)))
+    rtworld.add(Quad(Vector3(555,0,0), Vector3(0,555,0), Vector3(0,0,555), green))
+    rtworld.add(Quad(Vector3(0,0,0), Vector3(0,555,0), Vector3(0,0,555), red))
+    rtworld.add(Quad(Vector3(343,554,332), Vector3(-130, 0, 0), Vector3(0, 0, -105), light))
+    rtworld.add(Quad(Vector3(0,0,0), Vector3(555,0,0), Vector3(0,0,555), white))
+    rtworld.add(Quad(Vector3(555,555,555), Vector3(-555,0,0), Vector3(0,0,-555), white))
+    rtworld.add(Quad(Vector3(0,0,555), Vector3(555,0,0), Vector3(0,555,0), white))
+    rtworld.add(ConstantMedium(.01, Rotate(15, Translate(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white), Vector3(0, 0, 100))), SolidColor(Vector3(.15,.15,1))))
+    rtworld.add(ConstantMedium(.01, Rotate(-18, Translate(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white), Vector3(0,0,100))), SolidColor(Vector3(.5,.5,.2))))
+    camera = Camera(1,600, 100, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
 def TextureSelector(isDiffuseLight=False) -> Texture:
     while True:
@@ -374,7 +391,7 @@ if __name__ == "__main__":
             camera = Camera(aspectRatio, imgWidth, samplesPerPixel, maxrayrecursion, fov, camerapos, cameralookpoint, cameraup, defocusAngle, focusDist, bgcolor, outputFile)
             camera.Render(world)
         elif cmdinput == "predefined" or cmdinput == "Predefined":
-            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Transformed\nLambertian Checkered Spheres\nMoving Spheres\nTriangle\nEllipse\nAnnulus\n")
+            predefinedtype = input("Please choose from the list of predefined scenes to render:\nEmpty Cornell Box\nEarth\nPerlin Sphere\nMetals\nRTOneWeekend Final\nDielectrics\nBoxes in Cornell Box\nBoxes in Cornell Box Transformed\nLambertian Checkered Spheres\nMoving Spheres\nTriangle\nEllipse\nAnnulus\nCornell Smoke\n")
             if predefinedtype == "empty cornell box" or predefinedtype == "Empty Cornell box" or predefinedtype == "Empty Cornell Box":
                 filePath = input("Please enter the location to output the cornell box render to: ")
                 RenderCornellEmpty(filePath)
@@ -426,6 +443,10 @@ if __name__ == "__main__":
             elif predefinedtype == "Annulus":
                 filePath = input("Please enter the location to output the render to: ")
                 RenderAnnulus(filePath)
+                break
+            elif predefinedtype == "Cornell Smoke":
+                filePath = input("Please enter the location to output the render to: ")
+                RenderCornellSmoke(filePath)
                 break
             else:
                 print("Predefined scene not found")
