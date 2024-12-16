@@ -6,7 +6,7 @@ from interval import Interval
 from vector3 import Vector3
 from rtutils import *
 from multiprocessing import *
-from math import ceil
+from math import ceil, sqrt
 
 class ProcessResult:
     __slots__ = 'colors', 'sectionNumber'
@@ -15,8 +15,8 @@ class ProcessResult:
         self.sectionNumber = sectionNumber
 class Camera:
     '''Point of view from which scenes are rendered to create an image output'''
-    __slots__ = 'samplesPerPixel', 'cameraCenter', 'w', 'u', 'v', 'viewportHeightVector', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV'
-    def Render(self, world: hittableList):
+    __slots__ = 'samplesPerPixel', 'cameraCenter', 'w', 'u', 'v', 'viewportHeightVector', 'sampleScale', 'maxDepth', 'outputLocation', 'aspectRatio', 'imageWidth', 'vfov', 'defocusAngle', 'focusDistance', 'backgroundColor', 'theta', 'h', 'focal_length', 'viewportHeight', 'imageHeight', 'viewportWidth', 'viewportWidthVector', 'pixelDeltaWidthVector', 'pixelDeltaHeightVector', 'viewportUpperLeft', 'pixel00Location', 'defocusRadius', 'defocusDiskU', 'defocusDiskV', 'sqrtSamplesPerPixel', 'reciprocalSqrtSamplesPerPixel'
+    def Render(self: 'Camera', world: hittableList):
         '''Renders a hittableList scene and outputs the image to a file in PPM format using multithreading which uses all cpu cores'''
         logFile = open('logfile.txt', 'w')
         currentLine = 0
@@ -69,17 +69,18 @@ class Camera:
     def RenderPixel(self: 'Camera', x: int, y: int, world: hittableList) -> Vector3:
         '''Renders a pixel and returns the RGB color inside of a vector3 structure'''
         color = Vector3(0,0,0)
-        for s in range(0,self.samplesPerPixel):
-            ray = self.GetRay(x, y)
-            color += self.RayColor(ray, self.maxDepth, world)
+        for sj in range(0,self.sqrtSamplesPerPixel):
+            for si in range(0, self.sqrtSamplesPerPixel):
+                ray = self.GetRay(x, y, si, sj)
+                color += self.RayColor(ray, self.maxDepth, world)
         color = Vector3.MultiplyScalar(color, self.sampleScale)
         return color
-    def DefocusDiskSample(self):
+    def DefocusDiskSample(self: 'Camera'):
         point = Vector3.RandomInUnitDisk()
         return self.cameraCenter + (Vector3.MultiplyScalar(self.defocusDiskU, point.x)) + (Vector3.MultiplyScalar(self.defocusDiskV, point.y))
-    def GetRay(self, i: int, j: int) -> Ray:
-        '''Creates a ray from pixel coordinates of the image'''
-        offset = self.SampleSquare()
+    def GetRay(self: 'Camera', i: int, j: int, si: int, sj: int) -> Ray:
+        '''Creates a ray around the pixel location i, j(x,y) for the stratisfied sample square si, sj'''
+        offset = self.StratisfiedSampleSquare(si, sj)
         pixelSample = self.pixel00Location + (Vector3.MultiplyScalar(self.pixelDeltaWidthVector, (i + offset.x))) + (Vector3.MultiplyScalar(self.pixelDeltaHeightVector, (j + offset.y)))
         if self.defocusAngle <= 0:
             rayOrigin = self.cameraCenter
@@ -88,13 +89,20 @@ class Camera:
         rayDirection = pixelSample - self.cameraCenter
         rayTime = RandomFloat()
         return Ray(rayOrigin, rayDirection, False, Vector3(0,0,0), rayTime)
-    def SampleSquare(self) -> Vector3:
-        '''Creates a square from where samples will be taken to reduce noise / floating point errors and produce a clearer image'''
+    def StratisfiedSampleSquare(self: 'Camera', si: int, sj: int) -> Vector3:
+        '''Returns a random point in the square sub-pixel specified by grid indexes si, sj for an idealized unit square pixel of (-.5, -.5) to (.5, .5)'''
+        px = ((si + RandomFloat()) * self.reciprocalSqrtSamplesPerPixel) - 0.5
+        py = ((sj + RandomFloat()) * self.reciprocalSqrtSamplesPerPixel) - 0.5
+        return Vector3(px, py, 0)
+    def SampleSquare(self: 'Camera') -> Vector3:
+        '''Creates a square from where samples will be taken to reduce noise / floating point errors and produce a clearer image. Deprecated after integration of stratisfied sample squares'''
         return Vector3(RandomFloat() - 0.5, RandomFloat() - 0.5, 0)
-    def __init__(self, aspectRatio=16/9, imageWidth=400, samplesPerPixel=10, maxDepth=10, vfov=90, lookfrom=Vector3(0,0,0), lookat=Vector3(0,0,-1), vup=Vector3(0,1,0), defocusAngle=0, focusDistance=10, backgroundColor=Vector3(0.0, 0.0, 1.0), outputLocation="output.ppm"):
+    def __init__(self: 'Camera', aspectRatio=16/9, imageWidth=400, samplesPerPixel=10, maxDepth=10, vfov=90, lookfrom=Vector3(0,0,0), lookat=Vector3(0,0,-1), vup=Vector3(0,1,0), defocusAngle=0, focusDistance=10, backgroundColor=Vector3(0.0, 0.0, 1.0), outputLocation="output.ppm"):
         '''Creates a new camera from an aspect ratio, image width(height is determined from the width), sample count, maximum scatter rays, FOV, origin, look direction and camera upwards vector, defocus angle, focus distance, background color and output file location'''
         self.samplesPerPixel=samplesPerPixel
+        self.sqrtSamplesPerPixel = int(sqrt(samplesPerPixel))
         self.sampleScale = 1.0 / samplesPerPixel
+        self.reciprocalSqrtSamplesPerPixel = 1.0 / self.sqrtSamplesPerPixel
         self.maxDepth = maxDepth
         self.outputLocation = outputLocation
         self.aspectRatio = aspectRatio
