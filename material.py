@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from rtutils import *
-from vector3 import Vector3
+from vector3 import Vector3, OrthonormalBasis
 from ray import Ray
 from math import sqrt, log
 import rtutils
@@ -11,12 +11,16 @@ class Material(ABC):
     '''Abstract base class that all materials are derived from.
     Classes that inherit from this must implement the Scatter and emitted methods'''
     @abstractmethod
-    def Scatter(self: 'Material', ray: Ray, rec: HitRecord) -> Ray:
+    def Scatter(self: 'Material', ray: Ray, rec: HitRecord, scatteredRay: Ray, pdf: float) -> Ray:
         ''' Returns a ray scattered off the material given an inciting ray and hit record information'''
         pass
     @abstractmethod
-    def emitted(self: 'Material', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Material', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         ''' Returns the light emitted from a material from a point and UV coordinates'''
+        pass
+    @abstractmethod
+    def ScatterPDF(self: 'Material', rayOriginal: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        '''Returns the PDF value of the material, used in combination with Scatter'''
         pass
 # Matte material
 class Lambertian(Material):
@@ -27,18 +31,22 @@ class Lambertian(Material):
         '''Creates a lambertian(matte) material from a texture. '''
         self.tex = texture
     # This material does not emit any light
-    def emitted(self: 'Lambertian', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Lambertian', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         '''Returns the light emittance of the lambertian material for a point and UV coordinates.
         Lambertian materials do not emit light so this always returns 0,0,0'''
         return Vector3(0,0,0)
     # Scatter reflected rays in a random direction outwards
-    def Scatter(self: 'Lambertian', ray, rec) -> Ray:
+    def Scatter(self: 'Lambertian', ray: Ray, rec: HitRecord) -> Ray:
         '''This returns a scattered ray given an original inciting ray and hit information'''
-        scatterDirection = rec.normal + Vector3.RandomUnitVector()
-        if scatterDirection.NearZero():
-            scatterDirection = rec.normal
-        return Ray(rec.point, scatterDirection, True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)
-# Shiny material with hard reflections, depending on fuzz value
+        uwv = OrthonormalBasis(rec.normal)
+        scatterDir = uwv.Transform(Vector3.RandomCosineDirection())
+        scattered = Ray(rec.point, scatterDir.UnitVector(), True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)
+        scattered.pdf = uwv.w().dot(scattered.direction) / pi
+        return scattered
+    def ScatterPDF(self: Material, originalRay: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        return 1/(2*pi)
+    
+# Shiny material with hard or soft reflections, depending on fuzz value
 class Metal(Material):
     '''Shiny material with no light emittance and reflectance based on fuzz value(less fuzz, sharper reflection)'''
     __slots__ = 'albedo', 'fuzz'
@@ -51,7 +59,7 @@ class Metal(Material):
         else:
             self.fuzz = fuzz
     # This material does not emit any light
-    def emitted(self: 'Metal', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Metal', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         '''Returns the light emittance of the metal material for a point and UV coordinates. 
         Metal materials do not emit light so this always returns (0,0,0) / black'''
         return Vector3(0,0,0)
@@ -65,6 +73,8 @@ class Metal(Material):
             return Ray(rec.point, reflectedDir, True, self.albedo, ray.time)
         else:
             return Ray(rec.point, reflectedDir, False, self.albedo, ray.time)
+    def ScatterPDF(self: Material, rayOriginal: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        pass
 # Material that refracts light
 class Dielectric(Material):
     '''A material that does not emit any light and refracts rays inwards or reflects them outwards'''
@@ -79,7 +89,7 @@ class Dielectric(Material):
         r0 = (1 - refractionIndex) / (1 + refractionIndex)
         r0 = r0*r0
         return r0 + (1-r0)*pow((1-cosine), 5)
-    def emitted(self: 'Dielectric', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Dielectric', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         '''Return the light emittance of the dielectric material. The dielectric material does
         not emit light so this will always return (0,0,0)/black '''
         return Vector3(0,0,0)
@@ -99,6 +109,8 @@ class Dielectric(Material):
         else:
             direction = unitDir.Refract(rec.normal, refractionIndex)
         return Ray(rec.point, direction, True, Vector3(1.0,1.0,1.0), ray.time)
+    def ScatterPDF(self: Material, rayOriginal: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        pass
 # This material emits light into the scene
 class DiffuseLight(Material):
     '''A material that emits light into the scene from a texture'''
@@ -108,22 +120,30 @@ class DiffuseLight(Material):
         '''Creates a diffuse light material from a texture'''
         self.tex = tex
     # Emit the texture's color value for that point as light
-    def emitted(self: 'DiffuseLight', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'DiffuseLight', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         '''Emits the light of the color of the texture at the provided point and UV coordinates'''
+        #if(hitrecord.frontface == False):
+        #    return Vector3(0,0,0)
         return self.tex.Value(u, v, point)
     # Never reflect rays, other values here are just random placeholders
     def Scatter(self: 'DiffuseLight', ray: Ray, rec: HitRecord) -> Ray:
         '''This material does not scatter light therefore this function will always return a ray with the scattered property set to false'''
         return Ray.CreateNullRay()
+    def ScatterPDF(self: Material, rayOriginal: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        pass
 class Isotropic(Material):
     '''Picks a random uniform direction to scatter a ray in'''
     __slots__ = 'tex'
     def __init__(self: 'Isotropic', texture: Texture):
         '''Creates an isotropic material from a source texture'''
         self.tex = texture
-    def emitted(self: 'Isotropic', u: float, v: float, point: Vector3) -> Vector3:
+    def emitted(self: 'Isotropic', u: float, v: float, point: Vector3, ray: Ray, hitrecord: HitRecord) -> Vector3:
         '''This material does not emit light and therefore this function will always return 0,0,0 / black'''
         return Vector3(0,0,0)
     def Scatter(self: 'Isotropic', ray: Ray, rec: HitRecord) -> Ray:
         '''Takes an input ray and hitrecord information and scatters it in a random direction'''
-        return Ray(rec.point, Vector3.RandomUnitVector(), True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)
+        scatterRay = Ray(rec.point, Vector3.RandomUnitVector(), True, self.tex.Value(rec.u, rec.v, rec.point), ray.time)
+        scatterRay.pdf = 1 / (4*pi)
+        return scatterRay
+    def ScatterPDF(self: Material, rayOriginal: Ray, rec: HitRecord, scatteredRay: Ray) -> float:
+        return 1 / (4*pi)

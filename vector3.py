@@ -1,7 +1,7 @@
 # P2.0 Final project
 # REDACTED(I <3 not doxing myself)
 # Define a 3 coordinate system that will be used for positions, directions, and RGB colors(using aliases)
-from math import sqrt, fabs
+from math import sqrt, fabs, cos, sin
 from interval import Interval
 import rtutils
 class Vector3:
@@ -75,18 +75,28 @@ class Vector3:
         '''Creates a random vector with each coordinate a random value between a minimum and maximum'''
         return Vector3(rtutils.RandomFloatRange(min, max), rtutils.RandomFloatRange(min, max), rtutils.RandomFloatRange(min, max))
     @staticmethod
-    def RandomVectorInUnitSphere():
+    def RandomVectorInUnitSphere() -> 'Vector3':
         '''Creates a random vector inside of a unit sphere'''
         while True:
             p = Vector3.RandomVectorRange(-1, 1)
             if p.LengthSquared() < 1:
                 return p
     @staticmethod
-    def RandomUnitVector():
+    def RandomCosineDirection() -> 'Vector3':
+        '''Creates a random vector weighted by PDF'''
+        r1 = rtutils.RandomFloat()
+        r2 = rtutils.RandomFloat()
+        phi = 2*rtutils.pi*r1
+        x = cos(phi) * sqrt(r2)
+        y = sin(phi) * sqrt(r2)
+        z = sqrt(1-r2)
+        return Vector3(x,y,z)
+    @staticmethod
+    def RandomUnitVector() -> 'Vector3':
         '''Returns a random unit vector'''
         return Vector3.RandomVectorInUnitSphere().UnitVector()
     @staticmethod
-    def RandomOnHemisphere(normal: 'Vector3'):
+    def RandomOnHemisphere(normal: 'Vector3') -> 'Vector3':
         '''Returns a random vector on a hemisphere'''
         onUnitSphere = Vector3.RandomUnitVector()
         if onUnitSphere.dot(normal) > 0.0:
@@ -94,14 +104,14 @@ class Vector3:
         else:
             return onUnitSphere.Negative()
     @staticmethod
-    def RandomInUnitDisk():
+    def RandomInUnitDisk() -> 'Vector3':
         '''Returns a random vector in a unit disk'''
         while True:
             point = Vector3(rtutils.RandomFloatRange(-1, 1), rtutils.RandomFloatRange(-1, 1), 0)
             if point.LengthSquared() < 1:
                 return point
     @staticmethod
-    def LinearToGamma(linearComponent: float):
+    def LinearToGamma(linearComponent: float) -> float:
         '''If the linear component is > 0, then the sqrt of the linear component is returned otherwise return 0'''
         if linearComponent > 0:
             return sqrt(linearComponent)
@@ -124,3 +134,28 @@ class Vector3:
         rOutPerp = Vector3.MultiplyScalar((self + Vector3.MultiplyScalar(normal, cosTheta)), etaiOverEtat)
         rOutParallel = Vector3.MultiplyScalar(normal, -sqrt(fabs(1.0 - rOutPerp.LengthSquared())))
         return rOutPerp + rOutParallel
+    
+class OrthonormalBasis:
+    def __init__(self: 'OrthonormalBasis', n: Vector3):
+        if(n.x == 0):
+            n.x = 1e-8
+        if(n.y == 0):
+            n.y = 1e-8
+        if(n.z == 0):
+            n.z = 1e-8
+        self.axis = [Vector3(0,0,0), Vector3(0,0,0), Vector3(0,0,0)]
+        self.axis[2] = n.UnitVector()
+        if fabs(self.axis[2].x > 0.9):
+            a = Vector3(0,1,0)
+        else:
+            a = Vector3(1,0,0)
+        self.axis[1] = self.axis[2].cross(a).UnitVector()
+        self.axis[0] = self.axis[2].cross(self.axis[1])
+    def u(self: 'OrthonormalBasis') -> Vector3:
+        return self.axis[0]
+    def v(self: 'OrthonormalBasis') -> Vector3:
+        return self.axis[1]
+    def w(self: 'OrthonormalBasis') -> Vector3:
+        return self.axis[2]
+    def Transform(self: 'OrthonormalBasis', v: Vector3) -> Vector3:
+        return Vector3.MultiplyScalar(self.axis[0], v.x) + Vector3.MultiplyScalar(self.axis[1], v.y) + Vector3.MultiplyScalar(self.axis[2], v.z)

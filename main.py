@@ -39,7 +39,7 @@ def RenderCornellBoxes(filePath: str):
     rtworld.add(Quad(Vector3(0,0,555), Vector3(555,0,0), Vector3(0,555,0), white))
     rtworld.add(Quad.Box(Vector3(130,0,65), Vector3(295, 165, 230), white))
     rtworld.add(Quad.Box(Vector3(265, 0, 295), Vector3(430, 330, 460), white))
-    camera = Camera(1,600, 200, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
+    camera = Camera(1,600, 100, 50, 40, Vector3(278,278, -800), Vector3(278, 278, 0), Vector3(0,1,0), 0, 10, Vector3(0,0,0), filePath)
     camera.Render(rtworld)
 def RenderCornellBoxesTransforms(filePath: str):
     rtworld = hittableList(True)

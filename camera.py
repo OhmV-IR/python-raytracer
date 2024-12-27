@@ -140,12 +140,25 @@ class Camera:
             return Vector3(0,0,0)
         rec = world.hit(ray, Interval(0.0001, infinity))
         if rec.hit == True:
-            emissionColor = rec.mat.emitted(rec.u, rec.v, rec.point)
+            emissionColor = rec.mat.emitted(rec.u, rec.v, rec.point, ray, rec)
             scatteredRay = rec.mat.Scatter(ray, rec)
             if not scatteredRay.scattered:
                 return emissionColor
             else:
-                scatterColor = Vector3.Multiply(scatteredRay.attenuation, self.RayColor(scatteredRay, depth-1, world))
+                onLight = Vector3(RandomFloatRange(213,343), 554, RandomFloatRange(227,332))
+                toLight = onLight - rec.point
+                distanceSquared = toLight.LengthSquared()
+                toLight = toLight.UnitVector()
+                if(toLight.dot(rec.normal) < 0):
+                    return emissionColor
+                lightArea = (343-213)*(332-227)
+                lightCos = abs(toLight.y)
+                if(lightCos < 0.000001):
+                    return emissionColor
+                scatterRay = Ray(rec.point, toLight, True, Vector3(0,0,0), ray.time)
+                scatterPDF = rec.mat.ScatterPDF(ray, rec, scatterRay)
+                pdfValue = distanceSquared / (lightCos * lightArea)
+                scatterColor = Vector3.DivideScalar(Vector3.Multiply(Vector3.MultiplyScalar(scatteredRay.attenuation, 1/(2*pi)), self.RayColor(scatteredRay, depth-1, world)), 1/(2*pi))
                 return emissionColor + scatterColor
         else:
             return self.backgroundColor
